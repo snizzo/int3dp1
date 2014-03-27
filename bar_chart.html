@@ -16,6 +16,7 @@
 		</style>
 		<script src="libs/three.min.js"></script>
 		<script src="libs/stats.min.js"></script>
+		<script src="libs/controls/OrbitControls.js"></script>
 	</head>
 	<body>
 		
@@ -27,6 +28,9 @@
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			renderer.setClearColor( 0xf0f0f0 );
 			document.body.appendChild( renderer.domElement );
+			
+			controls = new THREE.OrbitControls( camera );
+			controls.addEventListener( 'change', render );
 			
 			var l = [[ 1, 2, 3, 7, 4], [3, 9, 2, 1, 5]]
 			var r = l.length
@@ -101,11 +105,10 @@
 			camera.position.x = n*4
 			
 			function render() {
-				requestAnimationFrame(render);
-				
-				stats.update();
+				//requestAnimationFrame(render);
 				
 				renderer.render(scene, camera);
+				stats.update();
 			}
 			
 			render();

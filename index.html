@@ -1,0 +1,26 @@
+<html>
+<head><title>Hello world!</title></head>
+<body>
+	<script src="libs/jquery-1.11.0.min.js"></script>
+	<script src="libs/parser.js"></script>
+	
+	<script>
+		/*
+			$.get( "csv/test.csv", function( data ) {
+				  $( "#container" ).html( data );
+				  alert( "Load was performed." );
+				});
+		*/
+		var csvfile = 
+		   ['ics,ipsilon,zeta',
+			'1,2,3'
+		   ].join('\n')
+		
+		var file = fromCsvToAssociative(csvfile);
+		
+	</script>
+	<div id="container">
+		container?
+	</div>
+</body>
+</html>
