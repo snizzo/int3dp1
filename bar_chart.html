@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Poligono_regolare</title>
+		<title>Bar_chart</title>
 		<style>
 		body {
 			font-family: Monospace;
@@ -32,29 +32,32 @@
 			controls = new THREE.OrbitControls( camera );
 			controls.addEventListener( 'change', render );
 			
-			var l = [[ 1, 2, 3, 7, 4], [3, 9, 2, 1, 5]]
-			var r = l.length
-			var n = l[1].length
+			var l = [[ 1, 2, 3, 7, 4], [3, 9, 2, 1, 5], [9, 3, 1, 6, 5]]
+			var r = l.length												//number of rows
+			var n = l[0].length												//number of bars per row
 			
 			// ground
 			
 			var material, geometry, mesh;
 			
-			material = new THREE.MeshBasicMaterial( { color: 0xffde00, side: THREE.FrontSide } );
+			material = new THREE.MeshBasicMaterial( { color: 0xffde00, side: THREE.DoubleSide } );
 			geometry = new THREE.Geometry();
 			
 			geometry.vertices.push( new THREE.Vector3( n*8, 0, r*8 ));	//0
 			geometry.vertices.push( new THREE.Vector3( n*8, 0, 0 ));	//1
 			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ));		//2
-			geometry.vertices.push( new THREE.Vector3( 0, 0, r*8 ));		//3
+			geometry.vertices.push( new THREE.Vector3( 0, 0, r*8 ));	//3
 			
 			geometry.vertices.push( new THREE.Vector3( n*8, 30, 0 ));	//4
 			geometry.vertices.push( new THREE.Vector3( 0, 30, 0 ));		//5
+			geometry.vertices.push( new THREE.Vector3( 0, 30, r*8 ));	//6
 			
 			geometry.faces.push( new THREE.Face3( 0, 1, 2 ));		//base
 			geometry.faces.push( new THREE.Face3( 2, 3, 0 ));
 			geometry.faces.push( new THREE.Face3( 1, 4, 5 ));		//wall
 			geometry.faces.push( new THREE.Face3( 5, 2, 1 ));
+			geometry.faces.push( new THREE.Face3( 2, 5, 6 ));		//left
+			geometry.faces.push( new THREE.Face3( 6, 3, 2 ));
 			
 			mesh = new THREE.Mesh(geometry, material);
 
@@ -62,46 +65,27 @@
 			
 			// bars
 			
-			var material, geometry, mesh;
-			
-			material = new THREE.MeshBasicMaterial( { color: 0x0000ff, side: THREE.FrontSide } );
-			geometry = new THREE.Geometry();
-			
-			
-			for (i=0; i<n; i++) {
-				geometry.vertices.push( new THREE.Vector3( (i*8+2)+4, 0, 4 ));		//0
-				geometry.vertices.push( new THREE.Vector3( (i*8+2)+4, 0, 0 ));		//1
-				geometry.vertices.push( new THREE.Vector3( (i*8+2)+0, 0, 0 ));		//2
-				geometry.vertices.push( new THREE.Vector3( (i*8+2)+0, 0, 4 ));		//3
-				
-				geometry.vertices.push( new THREE.Vector3( (i*8+2)+4, 4*l[0][i], 4 ));		//4
-				geometry.vertices.push( new THREE.Vector3( (i*8+2)+4, 4*l[0][i], 0 ));		//5
-				geometry.vertices.push( new THREE.Vector3( (i*8+2)+0, 4*l[0][i], 0 ));		//6
-				geometry.vertices.push( new THREE.Vector3( (i*8+2)+0, 4*l[0][i], 4 ));		//7
-				
-				geometry.faces.push( new THREE.Face3( i*8+0, i*8+5, i*8+4 ));	//right
-				geometry.faces.push( new THREE.Face3( i*8+0, i*8+1, i*8+5 ));
-				geometry.faces.push( new THREE.Face3( i*8+1, i*8+6, i*8+5 ));	//far
-				geometry.faces.push( new THREE.Face3( i*8+1, i*8+2, i*8+5 ));
-				geometry.faces.push( new THREE.Face3( i*8+2, i*8+7, i*8+6 ));	//left
-				geometry.faces.push( new THREE.Face3( i*8+2, i*8+3, i*8+7 ));
-				geometry.faces.push( new THREE.Face3( i*8+3, i*8+0, i*8+7 ));	//near
-				geometry.faces.push( new THREE.Face3( i*8+0, i*8+4, i*8+7 ));
-				geometry.faces.push( new THREE.Face3( i*8+4, i*8+5, i*8+6 ));	//top
-				geometry.faces.push( new THREE.Face3( i*8+6, i*8+7, i*8+4 ));
+			for (i=0; i<r; i++) {
+				for (j=0; j<n; j++) {
+					addCube ( l[i][j] )
+					cube.position.x = (j+1)*8-4
+					cube.position.y = l[i][j]/2
+					cube.position.z = (i+1)*8-4
+					scene.add( cube )
+				}
 			}
 			
-			mesh = new THREE.Mesh(geometry, material);
-
-			scene.add( mesh );
+			function addCube ( h ) {
+				cube = new THREE.Mesh( new THREE.CubeGeometry( 4, h, 4 ), new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.75, side: THREE.FrontSide }) );
+			}
 			
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
 			stats.domElement.style.top = '0px';
 			document.body.appendChild( stats.domElement );
 
-			camera.position.z = 20
-			camera.position.y = 4
+			camera.position.z = 40
+			camera.position.y = 10
 			camera.position.x = n*4
 			
 			function render() {
