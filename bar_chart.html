@@ -1,0 +1,114 @@
+<html>
+	<head>
+		<title>Poligono_regolare</title>
+		<style>
+		body {
+			font-family: Monospace;
+			background-color: #f0f0f0;
+			margin: 0px;
+			overflow: hidden;
+		}
+		
+		canvas { 
+			width: 100%; 
+			height: 100%;
+		}
+		</style>
+		<script src="libs/three.min.js"></script>
+		<script src="libs/stats.min.js"></script>
+	</head>
+	<body>
+		
+		<script>
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.setClearColor( 0xf0f0f0 );
+			document.body.appendChild( renderer.domElement );
+			
+			var l = [[ 1, 2, 3, 7, 4], [3, 9, 2, 1, 5]]
+			var r = l.length
+			var n = l[1].length
+			
+			// ground
+			
+			var material, geometry, mesh;
+			
+			material = new THREE.MeshBasicMaterial( { color: 0xffde00, side: THREE.FrontSide } );
+			geometry = new THREE.Geometry();
+			
+			geometry.vertices.push( new THREE.Vector3( n*8, 0, r*8 ));	//0
+			geometry.vertices.push( new THREE.Vector3( n*8, 0, 0 ));	//1
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ));		//2
+			geometry.vertices.push( new THREE.Vector3( 0, 0, r*8 ));		//3
+			
+			geometry.vertices.push( new THREE.Vector3( n*8, 30, 0 ));	//4
+			geometry.vertices.push( new THREE.Vector3( 0, 30, 0 ));		//5
+			
+			geometry.faces.push( new THREE.Face3( 0, 1, 2 ));		//base
+			geometry.faces.push( new THREE.Face3( 2, 3, 0 ));
+			geometry.faces.push( new THREE.Face3( 1, 4, 5 ));		//wall
+			geometry.faces.push( new THREE.Face3( 5, 2, 1 ));
+			
+			mesh = new THREE.Mesh(geometry, material);
+
+			scene.add( mesh );
+			
+			// bars
+			
+			var material, geometry, mesh;
+			
+			material = new THREE.MeshBasicMaterial( { color: 0x0000ff, side: THREE.FrontSide } );
+			geometry = new THREE.Geometry();
+			
+			
+			for (i=0; i<n; i++) {
+				geometry.vertices.push( new THREE.Vector3( (i*8+2)+4, 0, 4 ));		//0
+				geometry.vertices.push( new THREE.Vector3( (i*8+2)+4, 0, 0 ));		//1
+				geometry.vertices.push( new THREE.Vector3( (i*8+2)+0, 0, 0 ));		//2
+				geometry.vertices.push( new THREE.Vector3( (i*8+2)+0, 0, 4 ));		//3
+				
+				geometry.vertices.push( new THREE.Vector3( (i*8+2)+4, 4*l[0][i], 4 ));		//4
+				geometry.vertices.push( new THREE.Vector3( (i*8+2)+4, 4*l[0][i], 0 ));		//5
+				geometry.vertices.push( new THREE.Vector3( (i*8+2)+0, 4*l[0][i], 0 ));		//6
+				geometry.vertices.push( new THREE.Vector3( (i*8+2)+0, 4*l[0][i], 4 ));		//7
+				
+				geometry.faces.push( new THREE.Face3( i*8+0, i*8+5, i*8+4 ));	//right
+				geometry.faces.push( new THREE.Face3( i*8+0, i*8+1, i*8+5 ));
+				geometry.faces.push( new THREE.Face3( i*8+1, i*8+6, i*8+5 ));	//far
+				geometry.faces.push( new THREE.Face3( i*8+1, i*8+2, i*8+5 ));
+				geometry.faces.push( new THREE.Face3( i*8+2, i*8+7, i*8+6 ));	//left
+				geometry.faces.push( new THREE.Face3( i*8+2, i*8+3, i*8+7 ));
+				geometry.faces.push( new THREE.Face3( i*8+3, i*8+0, i*8+7 ));	//near
+				geometry.faces.push( new THREE.Face3( i*8+0, i*8+4, i*8+7 ));
+				geometry.faces.push( new THREE.Face3( i*8+4, i*8+5, i*8+6 ));	//top
+				geometry.faces.push( new THREE.Face3( i*8+6, i*8+7, i*8+4 ));
+			}
+			
+			mesh = new THREE.Mesh(geometry, material);
+
+			scene.add( mesh );
+			
+			stats = new Stats();
+			stats.domElement.style.position = 'absolute';
+			stats.domElement.style.top = '0px';
+			document.body.appendChild( stats.domElement );
+
+			camera.position.z = 20
+			camera.position.y = 4
+			camera.position.x = n*4
+			
+			function render() {
+				requestAnimationFrame(render);
+				
+				stats.update();
+				
+				renderer.render(scene, camera);
+			}
+			
+			render();
+		</script>
+	</body>
+</html>
