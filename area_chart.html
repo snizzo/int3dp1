@@ -19,6 +19,7 @@
 		<script src="libs/controls/OrbitControls.js"></script>
 		<script src="libs/fonts/helvetiker_bold.typeface.js"></script>
 		<script src="libs/textutils.js"></script>
+		<script src="libs/parser.js"></script>
 	</head>
 	<body>
 		
@@ -33,10 +34,21 @@
 			
 			controls = new THREE.OrbitControls( camera );
 			controls.addEventListener( 'change', render );
+			var csvfile = 
+				['label,costo,cpu,ram,mhz,fiber',
+				'2013,1,2,3,5,50',
+				'2012,20,10,9,5,8',
+				'2011,48,7,32,95,1',
+				].join('\n');
 			
-			var l = [[ 1, 2, 3, 7, 4], [3, 9, 4, 1, 5], [9, 3, 1, 6, 5]]
-			var r = l.length												//number of rows
-			var n = l[0].length												//number of bars per row
+			var file = fromCsvToAssociative(csvfile);
+			
+			/*
+			console.log(file["data"][0]["floats"]);
+			console.log(file["data"][2]["label"]);
+			*/
+			var r = file["data"].length;											//number of rows
+			var n = file["data"][0]["floats"].length;								//number of bars per row
 			
 			// ground
 			
@@ -65,20 +77,45 @@
 
 			scene.add( mesh );
 			
-			// area
+			// add labels
+			
+			var maximum = getMaxValue(file);
+			var maxexp = 27;
 			
 			for (i=0; i<r; i++) {
-				addShape ( l[i] );
+				
+				//for first line, add labels
+				if(i==(r-1)){
+					for (j=0; j<n; j++) {
+						var lmesh = getMeshText(file["header"][j], 2, 0.15, 0xcccccc);
+						lmesh.position.x = (j+1)*8-4;
+						lmesh.position.y = 0;
+						lmesh.position.z = (i+1)*8+8;
+						lmesh.rotation.z = Math.PI * 90/180;
+						lmesh.rotation.x = -(Math.PI * 90/180);
+						scene.add( lmesh );
+					}
+				}
+				
+				addShape ( i );
 				rectMesh.position.x = 4;
 				rectMesh.position.z = (i+1)*8-6;
 				scene.add( rectMesh );
 			}
 			
-			function addShape ( m ) {
+			function addShape ( i ) {
 				var rectShape = new THREE.Shape();
 				rectShape.moveTo( 0,0 );
 				for (j=0; j<n; j++) {
-					rectShape.lineTo( j*8, m[j] );
+					rectShape.lineTo( j*8, getNorm(file["data"][i]["floats"][j],maximum,maxexp) );
+					if(j==(n-1)){
+						var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, 0xcccccc);
+						lmesh.position.x = (j+1)*8+1;
+						lmesh.position.y = 0;
+						lmesh.position.z = (i+1)*8-4;
+						lmesh.rotation.x = -(Math.PI * 90/180);
+						scene.add( lmesh );
+					}
 				}
 				rectShape.lineTo( (n-1)*8, 0 );
 				rectShape.lineTo( 0, 0 );
