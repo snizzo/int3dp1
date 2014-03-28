@@ -34,7 +34,7 @@
 			controls = new THREE.OrbitControls( camera );
 			controls.addEventListener( 'change', render );
 			
-			var l = [[ 1, 2, 3, 7, 4], [3, 9, 2, 1, 5], [9, 3, 1, 6, 5]]
+			var l = [[ 1, 2, 3, 7, 4], [3, 9, 4, 1, 5], [9, 3, 1, 6, 5]]
 			var r = l.length												//number of rows
 			var n = l[0].length												//number of bars per row
 			
@@ -80,6 +80,7 @@
 			function addCube ( h ) {
 				cube = new THREE.Mesh( new THREE.CubeGeometry( 4, h, 4 ), new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.75, side: THREE.FrontSide }) );
 			}
+			
 			
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
