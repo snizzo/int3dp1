@@ -5,9 +5,12 @@
  * 
  * ["header": ["one","two","three"],
  *  "data": [
- * 				[1,2,3]
- * 				[4,5,6]
- * 				[7,8,9]
+ * 					["label": "ab",
+ * 				 	 "floats": ["1,2,3]]
+ * 					["label": "cd",
+ * 				 	 "floats": ["2,5,7]]
+ * 					["label": "ef",
+ * 				 	 "floats": ["9,4,3]]
  * 			]
  * ]
  * 
@@ -27,17 +30,49 @@ function fromCsvToAssociative(csv)
 	lines.shift();
 	//pushing every data line to data var
 	lines.forEach(function(entry) {
+		var lineData = [];
 		var floats = [];
-		entry.split(",").forEach(function(entry2) {
+		
+		var splits = entry.split(",");
+		lineData["label"] = splits[0];
+		splits.shift();
+		
+		splits.forEach(function(entry2) {
 			floats.push(parseFloat(entry2));
 		});
-		data.push(floats);
+		
+		lineData["floats"] = floats;
+		data.push(lineData);
 	});
 	
 	//building final array
 	var out = [];
-	out["header"] = header.split(",");
+	var head = header.split(",");
+	head.shift();
+	out["header"] = head;
 	out["data"] = data;
 	
 	return out;
+}
+
+function getMaxValue(arr)
+{
+	var allvalues = [];
+	file["data"].forEach(function(entry) {
+		//console.log(entry["label"]);
+		//console.log(entry["floats"]);
+		
+		entry["floats"].forEach(function(f_entry) {
+			allvalues.push( f_entry );
+		});
+		
+	});
+	
+	return Math.max.apply(Math,allvalues);
+}
+
+function getNorm(h,max,maxexp)
+{
+	var f = max/maxexp;
+	return h/f;
 }

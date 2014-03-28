@@ -1,12 +1,12 @@
 /*
  * This function generates text labels to be put in our graph
  */
-function getMeshText(text, sizevalue, colorcode)
+function getMeshText(text, sizevalue, heightvalue, colorcode)
 {
 	var textGeo = new THREE.TextGeometry( text, {
 
 		size: sizevalue,
-		height: 0.5,
+		height: heightvalue,
 		curveSegments: 4,
 
 		font: "helvetiker",

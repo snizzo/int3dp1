@@ -19,6 +19,7 @@
 		<script src="libs/controls/OrbitControls.js"></script>
 		<script src="libs/fonts/helvetiker_bold.typeface.js"></script>
 		<script src="libs/textutils.js"></script>
+		<script src="libs/parser.js"></script>
 	</head>
 	<body>
 		
@@ -28,15 +29,27 @@
 
 			var renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
-			renderer.setClearColor( 0xf0f0f0 );
+			renderer.setClearColor( 0x222222 );
 			document.body.appendChild( renderer.domElement );
 			
 			controls = new THREE.OrbitControls( camera );
 			controls.addEventListener( 'change', render );
 			
-			var l = [[ 1, 2, 3, 7, 4], [3, 9, 4, 1, 5], [9, 3, 1, 6, 5]]
-			var r = l.length												//number of rows
-			var n = l[0].length												//number of bars per row
+			var csvfile = 
+				['label,costo,cpu,ram,mhz,fiber',
+				'2013,1,2,3,5,50',
+				'2012,20,10,9,5,8',
+				'2011,48,7,32,95,1',
+				].join('\n');
+			
+			var file = fromCsvToAssociative(csvfile);
+			
+			/*
+			console.log(file["data"][0]["floats"]);
+			console.log(file["data"][2]["label"]);
+			*/
+			var r = file["data"].length;											//number of rows
+			var n = file["data"][0]["floats"].length;								//number of bars per row
 			
 			// ground
 			
@@ -65,22 +78,61 @@
 
 			scene.add( mesh );
 			
+			// add labels
+			
 			// bars
+			/*
+			console.log(file["header"]);
+			file["data"].forEach(function(entry) {
+				console.log(entry["label"]);
+				console.log(entry["floats"]);
+				
+				entry["floats"].forEach(function(f_entry) {
+					addCube ( f_entry );
+				});
+				
+			});
+			*/
+			
+			//
+			var maximum = getMaxValue(file);
+			var maxexp = 27;
 			
 			for (i=0; i<r; i++) {
-				for (j=0; j<n; j++) {
-					addCube ( l[i][j] )
-					cube.position.x = (j+1)*8-4
-					cube.position.y = l[i][j]/2
-					cube.position.z = (i+1)*8-4
-					scene.add( cube )
+				
+				//for first line, add labels
+				if(i==(r-1)){
+					for (j=0; j<n; j++) {
+						var lmesh = getMeshText(file["header"][j], 2, 0.15, 0xcccccc);
+						lmesh.position.x = (j+1)*8-4;
+						lmesh.position.y = 0;
+						lmesh.position.z = (i+1)*8+8;
+						lmesh.rotation.z = Math.PI * 90/180;
+						lmesh.rotation.x = -(Math.PI * 90/180);
+						scene.add( lmesh );
+					}
 				}
-			}
+				
+				for (j=0; j<n; j++) {
+					//console.log(file["data"][i]["floats"][j]);
+					//console.log(getNorm(file["data"][i]["floats"][j],maximum));
+					
+					addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp) );
+					cube.position.x = (j+1)*8-4;
+					cube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
+					cube.position.z = (i+1)*8-4;
+					scene.add( cube );
+					if(j==(n-1)){
+						var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, 0xcccccc);
+						lmesh.position.x = (j+1)*8+1;
+						lmesh.position.y = 0;
+						lmesh.position.z = (i+1)*8-4;
+						lmesh.rotation.x = -(Math.PI * 90/180);
+						scene.add( lmesh );
+					}
+				}
 			
-			function addCube ( h ) {
-				cube = new THREE.Mesh( new THREE.CubeGeometry( 4, h, 4 ), new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.75, side: THREE.FrontSide }) );
 			}
-			
 			
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
@@ -91,8 +143,11 @@
 			camera.position.y = 10
 			camera.position.x = n*4
 			
+			function addCube ( h ) {
+				cube = new THREE.Mesh( new THREE.CubeGeometry( 4, h, 4 ), new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.75, side: THREE.FrontSide }) );
+			}
+			
 			function render() {
-				//requestAnimationFrame(render);
 				
 				renderer.render(scene, camera);
 				stats.update();
