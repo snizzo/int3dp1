@@ -20,6 +20,7 @@
 		<script src="libs/fonts/helvetiker_bold.typeface.js"></script>
 		<script src="libs/textutils.js"></script>
 		<script src="libs/parser.js"></script>
+		<script src="libs/utils.js"></script>
 	</head>
 	<body>
 		
@@ -46,39 +47,48 @@
 			
 			var degrees = 360/n;
 			
-			var l = [1,2,3];
-			var d = [0,60,180]
-			s=6;
-			for (i=0; i<3; i++) {
-				var mesh = addSlice ( 1000/6*l[i] );
+			var l = [100,30,30,30,90,45];
+			var s = l.reduce(function(prev, cur) {
+				return prev + cur;
+			});
+			
+			var d = [0];
+			var c = 0;
+			
+			for (i=1; i<l.length; i++) {
+				d.push (360/s*l[i-1]+c);
+				c += 360/s*l[i-1];
+			}
+
+			
+			for (i=0; i<l.length; i++) {
+				var linecolor = getRandomColor();
+				var mesh = addSlice ( 1000/s*l[i], linecolor );
 				mesh.rotation.z = Math.PI*d[i]/180;
 			    scene.add( mesh );
 			}
 		
-			    
-			function addSlice ( n_v ) {
+			
+			function addSlice ( n_v, linecolor ) {
 				var material, geometry, mesh
-				material = new THREE.MeshBasicMaterial( { color: 0xff0000, side: THREE.DoubleSide } );
-				geometry = new THREE.Geometry();
-				geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ));
+				var rectShape = new THREE.Shape();
+				rectShape.moveTo( 0,0 );
 				
-				for (j=0; j<n_v; j++) {
+				for (j=0; j<n_v-5; j++) {
 					var x = Math.cos(Math.PI * (degrees*j/180));
 					var y = Math.sin(Math.PI * (degrees*j/180));
 					
-					geometry.vertices.push( new THREE.Vector3( x, y, 0 ));
+					rectShape.lineTo ( x, y );
 				}
-				
-				for (k=0; k<n_v; k++) {
-						geometry.faces.push( new THREE.Face3( 0, k, k+1));
-				}
+				rectShape.lineTo ( 0, 0 );
 				
 				var extrusionSettings = {
-					amount: 4, size: 1, height: 100, curveSegments: 3,
+					amount: 0.2, size: 1, height: 100, curveSegments: 3,
 					bevelThickness: 1, bevelSize: 2, bevelEnabled: false,
 					material: 0, extrudeMaterial: 1
 				};
-				return new THREE.Mesh(geometry, material);
+				var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
+				return new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial({ color: linecolor, transparent: true, side: THREE.FrontSide }) );		
 			}
 			
 			
