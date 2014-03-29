@@ -27,6 +27,14 @@
 		<script>
 			var scene = new THREE.Scene();
 			var camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			//var camera = new THREE.OrthographicCamera( window.innerWidth / - 20, window.innerWidth / 20, window.innerHeight / 20, window.innerHeight / - 20, 1, 1000 );
+			
+			//object highlight list
+			var objects = [];
+			//obj labels is a list of all rendered labels for mouse hovering
+			var obj_labels = [];
+			//last object selected (closest to camera)
+			var obj_selected = null;
 
 			var renderer = new THREE.WebGLRenderer(/*{ antialias: true }*/);
 			renderer.setSize( window.innerWidth, window.innerHeight );
@@ -35,6 +43,8 @@
 			
 			controls = new THREE.OrbitControls( camera );
 			controls.addEventListener( 'change', render );
+			
+			projector = new THREE.Projector();
 			
 			//setting lights
 			light1 = new THREE.DirectionalLight( 0xffffff, 2, 50 );
@@ -65,7 +75,7 @@
 			var n = file["data"][0]["floats"].length;								//number of bars per row
 			
 			var maximum = getMaxValue(file);
-			var maxexp = 27;
+			var maxexp = 30;
 			
 			// ground
 			
@@ -192,19 +202,84 @@
 			camera.position.z = 40
 			camera.position.y = 10
 			camera.position.x = n*4
+			window.addEventListener( 'resize', onWindowResize, false );
+			
+			//highlights
+			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 			
 			function addCube ( h,c) {
-				cube = new THREE.Mesh( new THREE.CubeGeometry( 4, h, 4 ), new THREE.MeshPhongMaterial( {
-																										ambient: c,
-																										color: c,
-																										specular: c,
-																										transparent:true,
-																										opacity:0.85,
-																										shininess: 2,
-																										shading: THREE.FlatShading }  )  );
+				var geom = new THREE.CubeGeometry( 4, h, 4 );
+				cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
+																			ambient: c,
+																			color: c,
+																			specular: c,
+																			transparent:true,
+																			opacity:0.85,
+																			shininess: 2,
+																			shading: THREE.FlatShading }  )  );
+				objects.push(cube);
+			}
+			
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+
+				var vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
+				projector.unprojectVector( vector, camera );
+
+				var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+				var intersects = raycaster.intersectObjects( objects );
+				
+				//if there's at least a collision
+				//take closest to camera and 
+				if ( intersects.length > 0 ) {
+					if(obj_selected != intersects[ 0 ].object){
+						//remove last labels
+						obj_labels.forEach(function(entry) { scene.remove(entry); });
+						obj_labels = [];
+						
+						//add new
+						objectHighlighted(intersects[ 0 ].object);
+						obj_selected = intersects[ 0 ].object;
+					} else {
+						
+					}
+				} else {
+					//remove
+					obj_labels.forEach(function(entry) { scene.remove(entry); });
+					obj_labels = [];
+					obj_selected = null;
+				}
 			}
 			
 			//scene.add( new THREE.AmbientLight( 0xFF0000 ) );
+			
+			function objectHighlighted(obj)
+			{
+				var height = obj.geometry.height;
+				var value = getValue(height, maximum, maxexp);
+				
+				var lmesh = getMeshText(value.toString(), 2, 0.15, 0xcccccc);
+				lmesh.position.x = obj.position.x;
+				lmesh.position.y = height;
+				lmesh.position.z = obj.position.z;
+				lmesh.lookAt(camera.position);
+				scene.add( lmesh );
+				obj_labels.push( lmesh );
+				
+				/*
+				var pgeom = new THREE.PlaneGeometry( 100, 100 );
+				var pmat = new THREE.MeshBasicMaterial( { color: 0xbbbbbb, transparent: true, opacity:0.1, side: THREE.FrontSide } );
+				var pmesh = new THREE.Mesh( pgeom, pmat);
+				pmesh.position.z = obj.position.z;
+				pmesh.position.x = obj.position.x;
+				pmesh.position.y = height;
+				pmesh.rotation.x = -(Math.PI * 90/180);
+				scene.add(pmesh);
+				obj_labels.push( pmesh );
+				*/ //not working comparison plane
+			}
 			
 			function animate() {
 

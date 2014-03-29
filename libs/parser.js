@@ -76,3 +76,9 @@ function getNorm(h,max,maxexp)
 	var f = max/maxexp;
 	return h/f;
 }
+
+function getValue(h,max,maxexp)
+{
+	var f = max/maxexp;
+	return h*f;
+}
