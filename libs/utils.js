@@ -1,22 +1,32 @@
 
-function getRandomColor() {
-    var letters = '047'.split('');
-    var color = '#';
-    var c1 = '';
-    var c2 = '';
-    var c3 = '';
+function getRandomColor(i) {
+    var colors = [];
+    var lcolors = [];
     
-    var letterc1 = letters[Math.round(Math.random() * 2)];
-    var letterc2 = letters[Math.round(Math.random() * 2)];
-    var letterc3 = letters[Math.round(Math.random() * 2)];
+    //default good colors
+    colors.push("#00DBD8");
+    colors.push("#0045DB");
+    colors.push("#CF007F");
+    colors.push("#DB7700");
+    colors.push("#DBDB00");
+    colors.push("#54DB00");
     
-    c1 += letterc1 + letterc1;
-    c2 += letterc2 + letterc2;
-    c3 += letterc3 + letterc3;
+    //default +30% brighter good colors
+	lcolors.push("#00ffff"); 
+	lcolors.push("#005aff"); 
+	lcolors.push("#ff00a5");
+    lcolors.push("#ff9b00"); 
+	lcolors.push("#ffff00"); 
+	lcolors.push("#6dff00"); 
     
-    color += c1 + c2 + c3;
+    //choose one based on a seed
+    var r = i % colors.length;
     
-    return color;
+    var results = [];
+    results.push(colors[r]);
+    results.push(lcolors[r]);
+    
+    return results;
 }
 
 function onWindowResize() 

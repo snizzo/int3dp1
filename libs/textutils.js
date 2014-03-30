@@ -7,15 +7,15 @@ function getMeshText(text, sizevalue, heightvalue, colorcode)
 
 		size: sizevalue,
 		height: heightvalue,
-		curveSegments: 3,
+		curveSegments: 2,
 
 		font: "helvetiker",
-		weight: "bold",
+		weight: "normal",
 		style: "normal",
 
 	});
-	var material = new THREE.MeshPhongMaterial({color: colorcode});
+	var material = new THREE.MeshPhongMaterial({color: colorcode, shading: THREE.SmoothShading});
 	var mesh = new THREE.Mesh(textGeo, material);
 	
-	return mesh; 
+	return mesh;
 }

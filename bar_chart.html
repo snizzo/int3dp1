@@ -17,7 +17,8 @@
 		<script src="libs/three.min.js"></script>
 		<script src="libs/stats.min.js"></script>
 		<script src="libs/controls/OrbitControls.js"></script>
-		<script src="libs/fonts/helvetiker_bold.typeface.js"></script>
+		<script src="libs/controls/TrackballControls.js"></script>
+		<script src="libs/fonts/helvetiker_regular.typeface.js"></script>
 		<script src="libs/textutils.js"></script>
 		<script src="libs/parser.js"></script>
 		<script src="libs/utils.js"></script>
@@ -26,7 +27,7 @@
 		
 		<script>
 			var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			var camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
 			//var camera = new THREE.OrthographicCamera( window.innerWidth / - 20, window.innerWidth / 20, window.innerHeight / 20, window.innerHeight / - 20, 1, 1000 );
 			
 			//object highlight list
@@ -36,12 +37,17 @@
 			//last object selected (closest to camera)
 			var obj_selected = null;
 
-			var renderer = new THREE.WebGLRenderer(/*{ antialias: true }*/);
+			var renderer = new THREE.WebGLRenderer({ antialias: true });
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			renderer.setClearColor( 0x111111 );
 			document.body.appendChild( renderer.domElement );
 			
-			controls = new THREE.OrbitControls( camera );
+			controls = new THREE.TrackballControls( camera, renderer.domElement );
+			controls.zoomSpeed = 0.3;
+			controls.rotateSpeed = 0.1;
+			controls.minDistance = 5;
+			controls.maxDistance = 100;
+			
 			controls.addEventListener( 'change', render );
 			
 			projector = new THREE.Projector();
@@ -49,7 +55,7 @@
 			//setting lights
 			light1 = new THREE.DirectionalLight( 0xffffff, 2, 50 );
 			light1.position.x = 2;
-			light1.position.y = 10;
+			light1.position.y = 4;
 			light1.position.z = 5;
 			light1.lookAt( new THREE.Vector3(0,0,0) );
 			scene.add( light1 );
@@ -60,8 +66,8 @@
 			//loading file and building base
 			var csvfile = 
 				['label,costo,cpu,ram,mhz,fiber',
-				'2013,1,2,3,5,50',
-				'2012,20,10,9,5,8',
+				'2013,67,23,11,5,50',
+				'2012,20,10,13,65,8',
 				'2011,48,7,32,95,1',
 				].join('\n');
 			
@@ -171,18 +177,22 @@
 					}
 				}
 				
-				var linecolor = getRandomColor();
+				var lcolors = getRandomColor(i);
+				var linecolor = lcolors[0];
+				var shinecolor = lcolors[1];
+				
 				console.log(linecolor);
 				
 				for (j=0; j<n; j++) {
 					//console.log(file["data"][i]["floats"][j]);
 					//console.log(getNorm(file["data"][i]["floats"][j],maximum));
 					
-					addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor );
-					cube.position.x = (j+1)*8-4;
-					cube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
-					cube.position.z = (i+1)*8-4;
+					addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor );
+					cube.position.x = wcube.position.x = (j+1)*8-4;
+					cube.position.y = wcube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
+					cube.position.z = wcube.position.z = (i+1)*8-4;
 					scene.add( cube );
+					scene.add( wcube );
 					if(j==(n-1)){
 						var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor);
 						lmesh.position.x = (j+1)*8+1;
@@ -207,16 +217,19 @@
 			//highlights
 			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 			
-			function addCube ( h,c) {
+			function addCube ( h,c, sc) {
 				var geom = new THREE.CubeGeometry( 4, h, 4 );
 				cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
 																			ambient: c,
 																			color: c,
-																			specular: c,
+																			specular: "#ffffff",
 																			transparent:true,
 																			opacity:0.85,
 																			shininess: 2,
 																			shading: THREE.FlatShading }  )  );
+				wcube = new THREE.BoxHelper( cube );
+				wcube.material.color.set( sc );
+
 				objects.push(cube);
 			}
 			
@@ -236,7 +249,9 @@
 				if ( intersects.length > 0 ) {
 					if(obj_selected != intersects[ 0 ].object){
 						//remove last labels
-						obj_labels.forEach(function(entry) { scene.remove(entry); });
+						obj_labels.forEach(function(entry) {
+							scene.remove(entry);
+						});
 						obj_labels = [];
 						
 						//add new
@@ -268,23 +283,88 @@
 				scene.add( lmesh );
 				obj_labels.push( lmesh );
 				
-				/*
-				var pgeom = new THREE.PlaneGeometry( 100, 100 );
-				var pmat = new THREE.MeshBasicMaterial( { color: 0xbbbbbb, transparent: true, opacity:0.1, side: THREE.FrontSide } );
+				
+				var pgeom = new THREE.CubeGeometry( 10000, 0.01, 0.01 );
+				var pmat = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0 } );
 				var pmesh = new THREE.Mesh( pgeom, pmat);
-				pmesh.position.z = obj.position.z;
+				pmesh.position.z = obj.position.z -2.03;
 				pmesh.position.x = obj.position.x;
 				pmesh.position.y = height;
-				pmesh.rotation.x = -(Math.PI * 90/180);
+				
+				var wmesh = new THREE.BoxHelper( pmesh );
+				wmesh.material.color.set( 0xffffff );
+				wmesh.position.z = obj.position.z -2.03;
+				wmesh.position.x = obj.position.x;
+				wmesh.position.y = height;
+				
+				pmesh.add( wmesh );
+				
 				scene.add(pmesh);
 				obj_labels.push( pmesh );
-				*/ //not working comparison plane
+				
+				var pgeom = new THREE.CubeGeometry( 10000, 0.01, 0.01 );
+				var pmat = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0 } );
+				var pmesh = new THREE.Mesh( pgeom, pmat);
+				pmesh.position.z = obj.position.z +2.03;
+				pmesh.position.x = obj.position.x;
+				pmesh.position.y = height;
+				
+				var wmesh = new THREE.BoxHelper( pmesh );
+				wmesh.material.color.set( 0xffffff );
+				wmesh.position.z = obj.position.z +2.03;
+				wmesh.position.x = obj.position.x;
+				wmesh.position.y = height;
+				
+				pmesh.add( wmesh );
+				
+				scene.add(pmesh);
+				obj_labels.push( pmesh );
+				
+				var pgeom = new THREE.CubeGeometry( 10000, 0.01, 0.01 );
+				var pmat = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0 } );
+				var pmesh = new THREE.Mesh( pgeom, pmat);
+				pmesh.position.z = obj.position.z;
+				pmesh.position.x = obj.position.x -2.03;
+				pmesh.position.y = height;
+				pmesh.rotation.y = Math.PI * 0.5;
+				
+				var wmesh = new THREE.BoxHelper( pmesh );
+				wmesh.material.color.set( 0xffffff );
+				wmesh.position.z = obj.position.z;
+				wmesh.position.x = obj.position.x -2.03;
+				wmesh.position.y = height;
+				wmesh.rotation.y = Math.PI * 0.5;
+				
+				pmesh.add( wmesh );
+				
+				scene.add(pmesh);
+				obj_labels.push( pmesh );
+				
+				var pgeom = new THREE.CubeGeometry( 10000, 0.01, 0.01 );
+				var pmat = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0 } );
+				var pmesh = new THREE.Mesh( pgeom, pmat);
+				pmesh.position.z = obj.position.z;
+				pmesh.position.x = obj.position.x +2.03;
+				pmesh.position.y = height;
+				pmesh.rotation.y = Math.PI * 0.5;
+				
+				var wmesh = new THREE.BoxHelper( pmesh );
+				wmesh.material.color.set( 0xffffff );
+				wmesh.position.z = obj.position.z;
+				wmesh.position.x = obj.position.x +2.03;
+				wmesh.position.y = height;
+				wmesh.rotation.y = Math.PI * 0.5;
+				
+				pmesh.add( wmesh );
+				
+				scene.add(pmesh);
+				obj_labels.push( pmesh );
 			}
 			
 			function animate() {
 
 				requestAnimationFrame( animate );
-
+				controls.update();
 				render();
 
 			}
