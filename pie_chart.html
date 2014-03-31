@@ -28,7 +28,7 @@
 			var scene = new THREE.Scene();
 			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
-			var renderer = new THREE.WebGLRenderer();
+			var renderer = new THREE.WebGLRenderer({antialias: true});
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			renderer.setClearColor( 0xf0f0f0 );
 			document.body.appendChild( renderer.domElement );
@@ -41,7 +41,7 @@
 			
 			var degrees = 360/n;  											// degrees per point
 			
-			var l = [100,30,100];
+			var l = [1,2,3,6,2,3];
 			var s = l.reduce(function(prev, cur) {							// s = sum of the list elements
 				return prev + cur;
 			});
@@ -52,36 +52,72 @@
 			for (i=1; i<l.length; i++) {
 				d.push (c += 360/s*l[i-1]);
 			}
-
 			
 			for (i=0; i<l.length; i++) {
-				var linecolor = getRandomColor();
-				var mesh = addSlice ( 1000/s*l[i], linecolor );
+				var lcolors = getRandomColor(i);
+				var linecolor = lcolors[0];
+				var shinecolor = lcolors[1];
+				var mesh = addSlice ( 1000/s*l[i], linecolor, shinecolor );
 				mesh.rotation.z = Math.PI*d[i]/180;
 			    scene.add( mesh );
 			}
-		
-			
-			function addSlice ( n_v, linecolor ) {
+			move (mesh);
+			//
+			function move (mesh) {
+				mesh.position.x = 0.1*Math.cos(Math.PI*mesh.degrees/180);
+				mesh.position.y = 0.1*Math.sin(Math.PI*mesh.degrees/180);
+			}
+			//
+			function addSlice ( n_v, linecolor, shinecolor ) {
 				var material, geometry, mesh
 				var rectShape = new THREE.Shape();
+				
+				var lineMaterial = new THREE.LineBasicMaterial({color: shinecolor});
+				var lineGeometry = new THREE.Geometry();
+				var lineMaterial1 = new THREE.LineBasicMaterial({color: shinecolor});
+				var lineGeometry1 = new THREE.Geometry();
+				
 				rectShape.moveTo( 0,0 );
+				lineGeometry.vertices.push( new THREE.Vector3( 1, 0, 0.2 ) );
+				lineGeometry.vertices.push( new THREE.Vector3( 1, 0, 0 ) );
+				lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+				lineGeometry1.vertices.push( new THREE.Vector3( 0, 0, 0.2 ) );
 				
 				for (j=0; j<n_v-3; j++) {
 					var x = Math.cos(Math.PI * (degrees*j/180));
 					var y = Math.sin(Math.PI * (degrees*j/180));
 					
 					rectShape.lineTo ( x, y );
+					lineGeometry.vertices.push( new THREE.Vector3( x, y, 0 ) );
+					lineGeometry1.vertices.push( new THREE.Vector3( x, y, 0.2 ) );
 				}
 				rectShape.lineTo ( 0, 0 );
 				
+				lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+				lineGeometry.vertices.push( new THREE.Vector3( Math.cos(Math.PI * (degrees*(j-1)/180)), Math.sin(Math.PI * (degrees*(j-1)/180)), 0 ) );
+				lineGeometry.vertices.push( new THREE.Vector3( Math.cos(Math.PI * (degrees*(j-1)/180)), Math.sin(Math.PI * (degrees*(j-1)/180)), 0.2 ) );
+				lineGeometry1.vertices.push( new THREE.Vector3( 0, 0, 0.2 ) );
+				
 				var extrusionSettings = {
 					amount: 0.2, size: 1, height: 100, curveSegments: 3,
-					bevelThickness: 1, bevelSize: 2, bevelEnabled: false,
+					bevelThickness: 0, bevelSize: 0, bevelEnabled: false,
 					material: 0, extrudeMaterial: 1
 				};
+				var line = new THREE.Line( lineGeometry, lineMaterial );
+				var line1	 = new THREE.Line( lineGeometry1, lineMaterial1 );
+				
 				var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
-				return new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial({ color: linecolor, transparent: true, side: THREE.FrontSide }) );		
+				var meshGeom = new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial({ color: linecolor, transparent: true, side: THREE.FrontSide }) );
+				if (i==l.length-1) {
+					meshGeom.degrees = (360+d[i])/2;
+				} else {
+					meshGeom.degrees = (d[i+1]+d[i])/2;
+				}
+				
+				meshGeom.add( line );
+				meshGeom.add( line1 );
+				console.log(meshGeom.degrees)
+				return meshGeom;
 			}
 			
 			
