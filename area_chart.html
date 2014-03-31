@@ -1,0 +1,153 @@
+<html>
+	<head>
+		<title>Area_chart</title>
+		<style>
+		body {
+			font-family: Monospace;
+			background-color: #f0f0f0;
+			margin: 0px;
+			overflow: hidden;
+		}
+		
+		canvas { 
+			width: 100%; 
+			height: 100%;
+		}
+		</style>
+		<script src="libs/three.min.js"></script>
+		<script src="libs/stats.min.js"></script>
+		<script src="libs/controls/OrbitControls.js"></script>
+		<script src="libs/fonts/helvetiker_bold.typeface.js"></script>
+		<script src="libs/textutils.js"></script>
+		<script src="libs/parser.js"></script>
+	</head>
+	<body>
+		
+		<script>
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.setClearColor( 0xf0f0f0 );
+			document.body.appendChild( renderer.domElement );
+			
+			controls = new THREE.OrbitControls( camera );
+			controls.addEventListener( 'change', render );
+			var csvfile = 
+				['label,costo,cpu,ram,mhz,fiber',
+				'2013,1,2,3,5,50',
+				'2012,20,10,9,5,8',
+				'2011,48,7,32,95,1',
+				].join('\n');
+			
+			var file = fromCsvToAssociative(csvfile);
+			
+			/*
+			console.log(file["data"][0]["floats"]);
+			console.log(file["data"][2]["label"]);
+			*/
+			var r = file["data"].length;											//number of rows
+			var n = file["data"][0]["floats"].length;								//number of bars per row
+			
+			// ground
+			
+			var material, geometry, mesh;
+			
+			material = new THREE.MeshBasicMaterial( { color: 0xffde00, side: THREE.DoubleSide } );
+			geometry = new THREE.Geometry();
+			
+			geometry.vertices.push( new THREE.Vector3( n*8, 0, r*8 ));	//0
+			geometry.vertices.push( new THREE.Vector3( n*8, 0, 0 ));	//1
+			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ));		//2
+			geometry.vertices.push( new THREE.Vector3( 0, 0, r*8 ));	//3
+			
+			geometry.vertices.push( new THREE.Vector3( n*8, 30, 0 ));	//4
+			geometry.vertices.push( new THREE.Vector3( 0, 30, 0 ));		//5
+			geometry.vertices.push( new THREE.Vector3( 0, 30, r*8 ));	//6
+			
+			geometry.faces.push( new THREE.Face3( 0, 1, 2 ));		//base
+			geometry.faces.push( new THREE.Face3( 2, 3, 0 ));
+			geometry.faces.push( new THREE.Face3( 1, 4, 5 ));		//wall
+			geometry.faces.push( new THREE.Face3( 5, 2, 1 ));
+			geometry.faces.push( new THREE.Face3( 2, 5, 6 ));		//left
+			geometry.faces.push( new THREE.Face3( 6, 3, 2 ));
+			
+			mesh = new THREE.Mesh(geometry, material);
+
+			scene.add( mesh );
+			
+			// add labels
+			
+			var maximum = getMaxValue(file);
+			var maxexp = 27;
+			
+			for (i=0; i<r; i++) {
+				
+				//for first line, add labels
+				if(i==(r-1)){
+					for (j=0; j<n; j++) {
+						var lmesh = getMeshText(file["header"][j], 2, 0.15, 0xcccccc);
+						lmesh.position.x = (j+1)*8-4;
+						lmesh.position.y = 0;
+						lmesh.position.z = (i+1)*8+8;
+						lmesh.rotation.z = Math.PI * 90/180;
+						lmesh.rotation.x = -(Math.PI * 90/180);
+						scene.add( lmesh );
+					}
+				}
+				
+				addShape ( i );
+				rectMesh.position.x = 4;
+				rectMesh.position.z = (i+1)*8-6;
+				scene.add( rectMesh );
+			}
+			
+			function addShape ( i ) {
+				var rectShape = new THREE.Shape();
+				rectShape.moveTo( 0,0 );
+				for (j=0; j<n; j++) {
+					rectShape.lineTo( j*8, getNorm(file["data"][i]["floats"][j],maximum,maxexp) );
+					if(j==(n-1)){
+						var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, 0xcccccc);
+						lmesh.position.x = (j+1)*8+1;
+						lmesh.position.y = 0;
+						lmesh.position.z = (i+1)*8-4;
+						lmesh.rotation.x = -(Math.PI * 90/180);
+						scene.add( lmesh );
+					}
+				}
+				rectShape.lineTo( (n-1)*8, 0 );
+				rectShape.lineTo( 0, 0 );
+
+				var extrusionSettings = {
+					amount: 4, size: 1, height: 100, curveSegments: 3,
+					bevelThickness: 1, bevelSize: 2, bevelEnabled: false,
+					material: 0, extrudeMaterial: 1
+				};
+				
+				var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
+				rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.75, side: THREE.DoubleSide }) );			
+			}
+			
+			
+			stats = new Stats();
+			stats.domElement.style.position = 'absolute';
+			stats.domElement.style.top = '0px';
+			document.body.appendChild( stats.domElement );
+
+			camera.position.z = 50
+			camera.position.y = 10
+			camera.position.x = n*4
+			
+			function render() {
+				//requestAnimationFrame(render);
+				
+				renderer.render(scene, camera);
+				stats.update();
+			}
+			
+			render();
+		</script>
+	</body>
+</html>
