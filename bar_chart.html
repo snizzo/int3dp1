@@ -16,7 +16,6 @@
 		</style>
 		<script src="libs/three.min.js"></script>
 		<script src="libs/stats.min.js"></script>
-		<script src="libs/controls/OrbitControls.js"></script>
 		<script src="libs/controls/TrackballControls.js"></script>
 		<script src="libs/fonts/helvetiker_regular.typeface.js"></script>
 		<script src="libs/textutils.js"></script>
@@ -37,23 +36,15 @@
 			//last object selected (closest to camera)
 			var obj_selected = null;
 
-			var renderer = new THREE.WebGLRenderer({ antialias: true });
+			var renderer = new THREE.WebGLRenderer(/*{ antialias: true }*/);
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			renderer.setClearColor( 0x111111 );
 			document.body.appendChild( renderer.domElement );
 			
-			controls = new THREE.TrackballControls( camera, renderer.domElement );
-			controls.zoomSpeed = 0.3;
-			controls.rotateSpeed = 0.1;
-			controls.minDistance = 5;
-			controls.maxDistance = 100;
-			
-			controls.addEventListener( 'change', render );
-			
 			projector = new THREE.Projector();
 			
 			//setting lights
-			light1 = new THREE.DirectionalLight( 0xffffff, 2, 50 );
+			light1 = new THREE.DirectionalLight( 0xffffff, 1, 50 );
 			light1.position.x = 2;
 			light1.position.y = 4;
 			light1.position.z = 5;
@@ -79,6 +70,14 @@
 			*/
 			var r = file["data"].length;											//number of rows
 			var n = file["data"][0]["floats"].length;								//number of bars per row
+			
+			controls = new THREE.TrackballControls( camera, renderer.domElement );
+			controls.zoomSpeed = 0.3;
+			controls.rotateSpeed = 0.05;
+			controls.minDistance = 5;
+			controls.maxDistance = 200;
+			controls.target = new THREE.Vector3(n*4, 0, r*4);
+			controls.addEventListener( 'change', render );
 			
 			var maximum = getMaxValue(file);
 			var maxexp = 30;
@@ -124,8 +123,8 @@
 				
 				//add labels for counting efficiently
 				var value = (maximum/10)*i;
-				var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc);
-				lmesh.position.x = -4;
+				var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc, "right");
+				lmesh.position.x = -1;
 				lmesh.position.y = -0.5+(3*i);
 				lmesh.position.z = r*8;
 				//lmesh.rotation.y = Math.PI * 90/180;
@@ -135,8 +134,8 @@
 			//draw maximum label
 			//add labels for counting efficiently
 			var value = maximum;
-			var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc);
-			lmesh.position.x = -4;
+			var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc, "right");
+			lmesh.position.x = -1;
 			lmesh.position.y = 29.5;
 			lmesh.position.z = r*8;
 			//lmesh.rotation.y = Math.PI * 90/180;
@@ -167,10 +166,10 @@
 				//for first line, add labels
 				if(i==(r-1)){
 					for (j=0; j<n; j++) {
-						var lmesh = getMeshText(file["header"][j], 2, 0.15, 0xcccccc);
+						var lmesh = getMeshText(file["header"][j], 2, 0.15, 0xcccccc, "right");
 						lmesh.position.x = (j+1)*8-4;
 						lmesh.position.y = 0;
-						lmesh.position.z = (i+1)*8+8;
+						lmesh.position.z = (i+1)*8+1;
 						lmesh.rotation.z = Math.PI * 90/180;
 						lmesh.rotation.x = -(Math.PI * 90/180);
 						scene.add( lmesh );
@@ -181,8 +180,6 @@
 				var linecolor = lcolors[0];
 				var shinecolor = lcolors[1];
 				
-				console.log(linecolor);
-				
 				for (j=0; j<n; j++) {
 					//console.log(file["data"][i]["floats"][j]);
 					//console.log(getNorm(file["data"][i]["floats"][j],maximum));
@@ -192,9 +189,9 @@
 					cube.position.y = wcube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
 					cube.position.z = wcube.position.z = (i+1)*8-4;
 					scene.add( cube );
-					scene.add( wcube );
+					cube.add( wcube );
 					if(j==(n-1)){
-						var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor);
+						var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left");
 						lmesh.position.x = (j+1)*8+1;
 						lmesh.position.y = 0;
 						lmesh.position.z = (i+1)*8-4;
@@ -275,90 +272,43 @@
 				var height = obj.geometry.height;
 				var value = getValue(height, maximum, maxexp);
 				
-				var lmesh = getMeshText(value.toString(), 2, 0.15, 0xcccccc);
+				var lmesh = getMeshText(value.toString(), 2, 0.15, 0xcccccc, "center");
 				lmesh.position.x = obj.position.x;
-				lmesh.position.y = height;
+				lmesh.position.y = height+1;
 				lmesh.position.z = obj.position.z;
-				lmesh.lookAt(camera.position);
+				lmesh.rotation.x = camera.rotation.x;
+				lmesh.rotation.y = camera.rotation.y;
+				lmesh.rotation.z = camera.rotation.z;
+				
 				scene.add( lmesh );
 				obj_labels.push( lmesh );
 				
+				var geometry = new THREE.Geometry();
+				geometry.vertices.push( new THREE.Vector3( -1000, 0, -2.01 ) );
+				geometry.vertices.push( new THREE.Vector3( 1000, 0, -2.01 ) );
+				var line = new THREE.Line( geometry, new THREE.LineBasicMaterial({color: 0xffffff}) );
 				
-				var pgeom = new THREE.CubeGeometry( 10000, 0.01, 0.01 );
-				var pmat = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0 } );
-				var pmesh = new THREE.Mesh( pgeom, pmat);
-				pmesh.position.z = obj.position.z -2.03;
-				pmesh.position.x = obj.position.x;
-				pmesh.position.y = height;
+				var geometry = new THREE.Geometry();
+				geometry.vertices.push( new THREE.Vector3( -1000, 0, +2.01 ) );
+				geometry.vertices.push( new THREE.Vector3( 1000, 0, +2.01 ) );
+				var line2 = new THREE.Line( geometry, new THREE.LineBasicMaterial({color: 0xffffff}) );
 				
-				var wmesh = new THREE.BoxHelper( pmesh );
-				wmesh.material.color.set( 0xffffff );
-				wmesh.position.z = obj.position.z -2.03;
-				wmesh.position.x = obj.position.x;
-				wmesh.position.y = height;
+				var geometry = new THREE.Geometry();
+				geometry.vertices.push( new THREE.Vector3( -2.01, 0, -1000 ) );
+				geometry.vertices.push( new THREE.Vector3( -2.01, 0, 1000 ) );
+				var line3 = new THREE.Line( geometry, new THREE.LineBasicMaterial({color: 0xffffff}) );
 				
-				pmesh.add( wmesh );
+				var geometry = new THREE.Geometry();
+				geometry.vertices.push( new THREE.Vector3( 2.01, 0, -1000 ) );
+				geometry.vertices.push( new THREE.Vector3( 2.01, 0, 1000 ) );
+				var line4 = new THREE.Line( geometry, new THREE.LineBasicMaterial({color: 0xffffff}) );
 				
-				scene.add(pmesh);
-				obj_labels.push( pmesh );
+				line.position.z = line2.position.z = line3.position.z = line4.position.z = obj.position.z;
+				line.position.x = line2.position.x = line3.position.x = line4.position.x = obj.position.x;
+				line.position.y = line2.position.y = line3.position.y = line4.position.y = height;
 				
-				var pgeom = new THREE.CubeGeometry( 10000, 0.01, 0.01 );
-				var pmat = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0 } );
-				var pmesh = new THREE.Mesh( pgeom, pmat);
-				pmesh.position.z = obj.position.z +2.03;
-				pmesh.position.x = obj.position.x;
-				pmesh.position.y = height;
-				
-				var wmesh = new THREE.BoxHelper( pmesh );
-				wmesh.material.color.set( 0xffffff );
-				wmesh.position.z = obj.position.z +2.03;
-				wmesh.position.x = obj.position.x;
-				wmesh.position.y = height;
-				
-				pmesh.add( wmesh );
-				
-				scene.add(pmesh);
-				obj_labels.push( pmesh );
-				
-				var pgeom = new THREE.CubeGeometry( 10000, 0.01, 0.01 );
-				var pmat = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0 } );
-				var pmesh = new THREE.Mesh( pgeom, pmat);
-				pmesh.position.z = obj.position.z;
-				pmesh.position.x = obj.position.x -2.03;
-				pmesh.position.y = height;
-				pmesh.rotation.y = Math.PI * 0.5;
-				
-				var wmesh = new THREE.BoxHelper( pmesh );
-				wmesh.material.color.set( 0xffffff );
-				wmesh.position.z = obj.position.z;
-				wmesh.position.x = obj.position.x -2.03;
-				wmesh.position.y = height;
-				wmesh.rotation.y = Math.PI * 0.5;
-				
-				pmesh.add( wmesh );
-				
-				scene.add(pmesh);
-				obj_labels.push( pmesh );
-				
-				var pgeom = new THREE.CubeGeometry( 10000, 0.01, 0.01 );
-				var pmat = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0 } );
-				var pmesh = new THREE.Mesh( pgeom, pmat);
-				pmesh.position.z = obj.position.z;
-				pmesh.position.x = obj.position.x +2.03;
-				pmesh.position.y = height;
-				pmesh.rotation.y = Math.PI * 0.5;
-				
-				var wmesh = new THREE.BoxHelper( pmesh );
-				wmesh.material.color.set( 0xffffff );
-				wmesh.position.z = obj.position.z;
-				wmesh.position.x = obj.position.x +2.03;
-				wmesh.position.y = height;
-				wmesh.rotation.y = Math.PI * 0.5;
-				
-				pmesh.add( wmesh );
-				
-				scene.add(pmesh);
-				obj_labels.push( pmesh );
+				obj_labels.push( line ); obj_labels.push( line2 ); obj_labels.push( line3 ); obj_labels.push( line4 );
+				scene.add( line ); scene.add( line2 ); scene.add( line3 ); scene.add( line4 );
 			}
 			
 			function animate() {
