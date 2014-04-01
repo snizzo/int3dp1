@@ -16,28 +16,47 @@
 		</style>
 		<script src="libs/three.min.js"></script>
 		<script src="libs/stats.min.js"></script>
-		<script src="libs/controls/OrbitControls.js"></script>
-		<script src="libs/fonts/helvetiker_bold.typeface.js"></script>
+		<script src="libs/controls/TrackballControls.js"></script>
+		<script src="libs/fonts/helvetiker_regular.typeface.js"></script>
 		<script src="libs/textutils.js"></script>
 		<script src="libs/parser.js"></script>
+		<script src="libs/utils.js"></script>
 	</head>
 	<body>
 		
 		<script>
 			var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-
-			var renderer = new THREE.WebGLRenderer();
+			var camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+                        
+			//object highlight list
+			var objects = [];
+			//obj labels is a list of all rendered labels for mouse hovering
+			var obj_labels = [];
+			//last object selected (closest to camera)
+			var obj_selected = null;
+                        
+			var renderer = new THREE.WebGLRenderer(/*{antialias: true}*/);
 			renderer.setSize( window.innerWidth, window.innerHeight );
-			renderer.setClearColor( 0xf0f0f0 );
+			renderer.setClearColor( 0x111111 );
 			document.body.appendChild( renderer.domElement );
-			
-			controls = new THREE.OrbitControls( camera );
-			controls.addEventListener( 'change', render );
+                        
+                        projector = new THREE.Projector();
+                        
+                        //setting lights
+                        light1 = new THREE.DirectionalLight( 0xffffff, 1, 50 );
+                        light1.position.x = 2;
+                        light1.position.y = 4;
+                        light1.position.z = 5;
+                        light1.lookAt( new THREE.Vector3(0,0,0) );
+                        scene.add( light1 );
+                        
+                        ambient = new THREE.AmbientLight( 0x333333 );
+                        scene.add( ambient );
+                        
 			var csvfile = 
 				['label,costo,cpu,ram,mhz,fiber',
-				'2013,1,2,3,5,50',
-				'2012,20,10,9,5,8',
+				'2013,67,23,11,5,50',
+				'2012,20,10,13,65,8',
 				'2011,48,7,32,95,1',
 				].join('\n');
 			
@@ -50,66 +69,150 @@
 			var r = file["data"].length;											//number of rows
 			var n = file["data"][0]["floats"].length;								//number of bars per row
 			
+			controls = new THREE.TrackballControls( camera, renderer.domElement );
+			controls.zoomSpeed = 0.3;
+			controls.rotateSpeed = 0.05;
+			controls.minDistance = 5;
+			controls.maxDistance = 200;
+			controls.target = new THREE.Vector3(n*4, 0, r*4);
+			controls.addEventListener( 'change', render );
+			
 			// ground
 			
 			var material, geometry, mesh;
+			var maximum = getMaxValue(file);
+			var maxexp = 30;
 			
-			material = new THREE.MeshBasicMaterial( { color: 0xffde00, side: THREE.DoubleSide } );
-			geometry = new THREE.Geometry();
+			darkgrey = new THREE.MeshPhongMaterial( { ambient: 0x444444, color: 0x444444, specular: 0x444444, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
+			lightgrey = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0x555555, specular: 0x555555, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
 			
-			geometry.vertices.push( new THREE.Vector3( n*8, 0, r*8 ));	//0
-			geometry.vertices.push( new THREE.Vector3( n*8, 0, 0 ));	//1
-			geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ));		//2
-			geometry.vertices.push( new THREE.Vector3( 0, 0, r*8 ));	//3
+			//add back panel
+			var previous = false;
+			for(i=0;i<10;i++){
+				var geometry = new THREE.PlaneGeometry( n*8, 3 );
+				if(previous==false){
+					var mesh = new THREE.Mesh(geometry,darkgrey);
+					previous = true;
+				} else {
+					var mesh = new THREE.Mesh(geometry,lightgrey);
+					previous = false;
+				}
+				mesh.position.y = 1.5+(3*i);
+				mesh.position.x += n*4;
+				scene.add(mesh);
+			}
 			
-			geometry.vertices.push( new THREE.Vector3( n*8, 30, 0 ));	//4
-			geometry.vertices.push( new THREE.Vector3( 0, 30, 0 ));		//5
-			geometry.vertices.push( new THREE.Vector3( 0, 30, r*8 ));	//6
+			//left panel
+			var previous = false;
+			for(i=0;i<10;i++){
+				var geometry = new THREE.PlaneGeometry( r*8, 3 );
+				if(previous==false){
+					var mesh = new THREE.Mesh(geometry,darkgrey);
+					previous = true;
+				} else {
+					var mesh = new THREE.Mesh(geometry,lightgrey);
+					previous = false;
+				}
+				mesh.rotation.y = (Math.PI * 90/180);
+				mesh.position.y = 1.5+(3*i);
+				mesh.position.z += r*4;
+				scene.add(mesh);
+				
+				//add labels for counting efficiently
+				var value = (maximum/10)*i;
+				var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc, "right");
+				lmesh.position.x = -1;
+				lmesh.position.y = -0.5+(3*i);
+				lmesh.position.z = r*8;
+				//lmesh.rotation.y = Math.PI * 90/180;
+				scene.add( lmesh );
+			}
 			
-			geometry.faces.push( new THREE.Face3( 0, 1, 2 ));		//base
-			geometry.faces.push( new THREE.Face3( 2, 3, 0 ));
-			geometry.faces.push( new THREE.Face3( 1, 4, 5 ));		//wall
-			geometry.faces.push( new THREE.Face3( 5, 2, 1 ));
-			geometry.faces.push( new THREE.Face3( 2, 5, 6 ));		//left
-			geometry.faces.push( new THREE.Face3( 6, 3, 2 ));
+			//draw maximum label
+			//add labels for counting efficiently
+			var value = maximum;
+			var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc, "right");
+			lmesh.position.x = -1;
+			lmesh.position.y = 29.5;
+			lmesh.position.z = r*8;
+			//lmesh.rotation.y = Math.PI * 90/180;
+			scene.add( lmesh );
 			
-			mesh = new THREE.Mesh(geometry, material);
-
-			scene.add( mesh );
+			var previous = false;
+			//base
+			for (i=0; i<r; i++) {
+				for (j=0; j<n; j++) {
+					var geometry = new THREE.PlaneGeometry( 8, 8 );
+					if(previous==false){
+						var mesh = new THREE.Mesh(geometry,lightgrey);
+						previous = true;
+					} else {
+						var mesh = new THREE.Mesh(geometry,darkgrey);
+						previous = false;
+					}
+					mesh.position.x = (j+1)*8-4;
+					mesh.position.y = 0;
+					mesh.position.z = (i+1)*8-4;
+					mesh.rotation.x = Math.PI * 90/180
+					scene.add( mesh );
+				}
+			}
 			
 			// add labels
 			
-			var maximum = getMaxValue(file);
-			var maxexp = 27;
-			
 			for (i=0; i<r; i++) {
+				
+				
+				var lcolors = getRandomColor(i);
+				var linecolor = lcolors[0];
+				var shinecolor = lcolors[1];
 				
 				//for first line, add labels
 				if(i==(r-1)){
 					for (j=0; j<n; j++) {
-						var lmesh = getMeshText(file["header"][j], 2, 0.15, 0xcccccc);
+						var lmesh = getMeshText(file["header"][j], 2, 0.15, 0xcccccc, "right");
 						lmesh.position.x = (j+1)*8-4;
 						lmesh.position.y = 0;
-						lmesh.position.z = (i+1)*8+8;
+						lmesh.position.z = (i+1)*8+1;
 						lmesh.rotation.z = Math.PI * 90/180;
 						lmesh.rotation.x = -(Math.PI * 90/180);
 						scene.add( lmesh );
 					}
 				}
 				
-				addShape ( i );
+				addShape ( i, linecolor, shinecolor );
 				rectMesh.position.x = 4;
 				rectMesh.position.z = (i+1)*8-6;
 				scene.add( rectMesh );
 			}
 			
-			function addShape ( i ) {
+			function addShape ( i, c, sc ) {
 				var rectShape = new THREE.Shape();
 				rectShape.moveTo( 0,0 );
+				
+				//list keeping in all the pointers of value labels
+				var labels = [];
+				
 				for (j=0; j<n; j++) {
-					rectShape.lineTo( j*8, getNorm(file["data"][i]["floats"][j],maximum,maxexp) );
+					//calculating normalized height of current chunk
+					var height = getNorm(file["data"][i]["floats"][j], maximum, maxexp);
+					rectShape.lineTo( j*8, height );
+					
+					//inserting a label showing value of the current height
+					var label = getMeshText(file["data"][i]["floats"][j], 2, 0.15, 0xcccccc, "center");
+					label.position.x = j*8+4;
+					label.position.y = height+1;
+					label.position.z = i*8+3;
+					label.rotation = camera.rotation;
+					scene.add( label );
+					//setting is to invisible by default
+					label.visible = false;
+					//adding to label list in order to have it on meshGeom later
+					labels.push( label );
+					
+					//if is writing the last element of a line, write also the line label
 					if(j==(n-1)){
-						var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, 0xcccccc);
+						var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, sc, "left");
 						lmesh.position.x = (j+1)*8+1;
 						lmesh.position.y = 0;
 						lmesh.position.z = (i+1)*8-4;
@@ -121,15 +224,24 @@
 				rectShape.lineTo( 0, 0 );
 
 				var extrusionSettings = {
-					amount: 4, size: 1, height: 100, curveSegments: 3,
-					bevelThickness: 1, bevelSize: 2, bevelEnabled: false,
-					material: 0, extrudeMaterial: 1
+					amount: 1, size: 1, height: 0, curveSegments: 10,
+					bevelThickness: 0.1, bevelSize: 0.1, bevelEnabled: true,
+					material: 0, extrudeMaterial: 5
 				};
 				
 				var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
-				rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.75, side: THREE.DoubleSide }) );			
+				rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshPhongMaterial( {
+											ambient: c,
+											color: c,
+											specular: "#ffffff",
+											transparent:true,
+											opacity:0.85,
+											shininess: 2,
+											shading: THREE.SmoothShading }  ) );
+				//adding labels to mesh
+				rectMesh.labels = labels;
+				objects.push(rectMesh);
 			}
-			
 			
 			stats = new Stats();
 			stats.domElement.style.position = 'absolute';
@@ -140,6 +252,77 @@
 			camera.position.y = 10
 			camera.position.x = n*4
 			
+			//resize render view when window is resized
+			// onWindowResize is located in utils.js
+			window.addEventListener( 'resize', onWindowResize, false );
+			
+			//highlights management
+			document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+			
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+
+				var vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
+				projector.unprojectVector( vector, camera );
+
+				var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+				var intersects = raycaster.intersectObjects( objects );
+				
+				//if there's at least a collision
+				//take closest to camera and 
+				if ( intersects.length > 0 ) {
+					if(obj_selected != intersects[ 0 ].object){
+						//remove last labels
+						obj_labels.forEach(function(entry) {
+							scene.remove(entry);
+						});
+						obj_labels = [];
+						
+						//hiding old highlighted object's labels
+						if(obj_selected != null){
+							obj_selected.labels.forEach( function (l){
+								l.visible = false;
+							});
+						}
+						
+						//add new
+						objectHighlighted(intersects[ 0 ].object);
+						obj_selected = intersects[ 0 ].object;
+					} else {
+					}
+				} else {
+					if(obj_selected != null){
+						obj_selected.labels.forEach( function (l){
+							l.visible = false;
+						});
+					}
+					//remove
+					obj_labels.forEach(function(entry) { scene.remove(entry); });
+					obj_labels = [];
+					obj_selected = null;
+				}
+			}
+			
+			//scene.add( new THREE.AmbientLight( 0xFF0000 ) );
+			
+			function objectHighlighted(obj)
+			{
+				obj.labels.forEach( function (l) {
+					l.visible = true;
+				});
+				
+			}
+			
+			function animate() {
+
+                                requestAnimationFrame( animate );
+                                controls.update();
+                                render();
+
+                        }
+			
 			function render() {
 				//requestAnimationFrame(render);
 				
@@ -147,7 +330,7 @@
 				stats.update();
 			}
 			
-			render();
+			animate();
 		</script>
 	</body>
 </html>
