@@ -38,7 +38,7 @@
 			
 			var renderer = new THREE.WebGLRenderer({antialias: true});
 			renderer.setSize( window.innerWidth, window.innerHeight );
-			renderer.setClearColor( 0xf0f0f0 );
+			renderer.setClearColor( 0x111111 );
 			document.body.appendChild( renderer.domElement );
 			
 			controls = new THREE.TrackballControls( camera, renderer.domElement );
@@ -132,7 +132,17 @@
 				var line1	 = new THREE.Line( lineGeometry1, lineMaterial1 );
 				
 				var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
-				var meshGeom = new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial({ color: linecolor, transparent: true, side: THREE.FrontSide }) );
+				
+				var meshGeomShineMaterial = new THREE.MeshPhongMaterial( {
+							ambient: linecolor,
+							color: linecolor,
+							specular: "#ffffff",
+							transparent:true,
+							opacity:1.0,
+							shininess: 2,
+							shading: THREE.FlatShading }  );
+				
+				var meshGeom = new THREE.Mesh( rectGeom, meshGeomShineMaterial );
 				if (i==l.length-1) {
 					meshGeom.degrees = (360+d[i])/2;
 				} else {
@@ -152,6 +162,7 @@
 			document.body.appendChild( stats.domElement );
 
 			camera.position.z = 2;
+			window.addEventListener( 'resize', onWindowResize, false );
 			
 			function animate() {
 
