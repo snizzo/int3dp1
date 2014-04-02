@@ -16,9 +16,8 @@
 		</style>
 		<script src="libs/three.min.js"></script>
 		<script src="libs/stats.min.js"></script>
-		<script src="libs/controls/OrbitControls.js"></script>
 		<script src="libs/controls/TrackballControls.js"></script>
-		<script src="libs/fonts/helvetiker_bold.typeface.js"></script>
+		<script src="libs/fonts/helvetiker_regular.typeface.js"></script>
 		<script src="libs/textutils.js"></script>
 		<script src="libs/parser.js"></script>
 		<script src="libs/utils.js"></script>
@@ -62,16 +61,27 @@
 			ambient = new THREE.AmbientLight( 0x333333 );
 			scene.add( ambient );
 			
-			var n = 1000;													// number of points (top circle)
+			var n = 1000; // number of points (top circle)
 			
-			var degrees = 360/n;  											// degrees per point
+			var degrees = 360/n; // degrees per point
 			
-			var l = [1,2,3,6,2,3];
-			var s = l.reduce(function(prev, cur) {							// s = sum of the list elements
+			//loading file and building base
+			var csvfile = 
+				['label,costo,cpu,ram,mhz,fiber',
+				'2013,670,230,605,362,10000',
+				'2012,20,10,13,65,8',
+				'2011,48,7,32,95,1',
+				].join('\n');
+			
+			var file = fromCsvToAssociative(csvfile);
+			var sum = getSum(file);
+			
+			var l = file["data"][0]["floats"];
+			var s = l.reduce(function(prev, cur) { // s = sum of the list elements
 				return prev + cur;
 			});
 			
-			var d = [0];													// d = array containing z rotations of the slices
+			var d = [0]; // d = array containing z rotations of the slices
 			var c = 0;
 			
 			for (i=1; i<l.length; i++) {
@@ -82,16 +92,40 @@
 				var lcolors = getRandomColor(i);
 				var linecolor = lcolors[0];
 				var shinecolor = lcolors[1];
-				var mesh = addSlice ( 1000/s*l[i], linecolor, shinecolor );
+				
+				var fac = n/s*l[i];
+				
+				//too small chunks fix
+				if(fac < 4.5){
+					fac = 4.5;
+				}
+				
+				var value = ((l[i]/sum)*100).toFixed(2)
+				
+				var mesh = addSlice ( fac, linecolor, shinecolor );
+				var pushPoint = getMidSlicePoint(mesh, 0.15);
+				var labelPoint = getMidSlicePoint(mesh, 0.65);
+				mesh.pushPoint = pushPoint;
+				mesh.labelPoint = labelPoint;
+				mesh.darkColor = linecolor;
+				mesh.lightColor = shinecolor;
+				mesh.labelText = file["header"][i]+": "+l[i]+ " ("+value+"%)";
+				
 				mesh.rotation.z = Math.PI*d[i]/180;
-			    scene.add( mesh );
+				
+				scene.add( mesh );
+				objects.push( mesh );
 			}
-			move (mesh);
+			
+			//console.log(getMidSlicePoint(mesh, 0.5));
 			//
-			function move (mesh) {
-				mesh.position.x = 0.1*Math.cos(Math.PI*mesh.degrees/180);
-				mesh.position.y = 0.1*Math.sin(Math.PI*mesh.degrees/180);
+			function getMidSlicePoint (mesh, f) {
+				var x = f*Math.cos(Math.PI*mesh.degrees/180);
+				var y = f*Math.sin(Math.PI*mesh.degrees/180);
+				
+				return new THREE.Vector3(x,y,0);
 			}
+			
 			//
 			function addSlice ( n_v, linecolor, shinecolor ) {
 				var material, geometry, mesh
@@ -138,7 +172,7 @@
 							color: linecolor,
 							specular: "#ffffff",
 							transparent:true,
-							opacity:1.0,
+							opacity:0.85,
 							shininess: 2,
 							shading: THREE.FlatShading }  );
 				
@@ -151,7 +185,7 @@
 				
 				meshGeom.add( line );
 				meshGeom.add( line1 );
-				console.log(meshGeom.degrees)
+				//console.log(meshGeom.degrees)
 				return meshGeom;
 			}
 			
@@ -162,7 +196,72 @@
 			document.body.appendChild( stats.domElement );
 
 			camera.position.z = 2;
+			//dynamic resize od viewport
 			window.addEventListener( 'resize', onWindowResize, false );
+			//highlights
+			document.addEventListener( 'mousedown', onDocumentMouseMove, true );
+			
+			
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+
+				var vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
+				projector.unprojectVector( vector, camera );
+
+				var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+				var intersects = raycaster.intersectObjects( objects );
+				
+				//if there's at least a collision
+				//take closest to camera and 
+				if ( intersects.length > 0 ) {
+					if(obj_selected != intersects[ 0 ].object){
+						obj_labels.forEach(function(entry) { scene.remove(entry); });
+						obj_labels = [];
+						//popping in
+						if(obj_selected!=null){
+							obj_selected.position = new THREE.Vector3(0,0,0);
+							obj_selected.material.color.set( obj_selected.darkColor );
+							obj_selected.material.opacity = 0.85;
+						}
+						
+						//add new
+						objectHighlighted(intersects[ 0 ].object);
+						obj_selected = intersects[ 0 ].object;
+					} else {
+						
+					}
+				} else {
+					if(obj_selected!=null){
+						//poppin in
+						obj_selected.position = new THREE.Vector3(0,0,0);
+						obj_selected.material.color.set( obj_selected.darkColor );
+						obj_selected.material.opacity = 0.85;
+						
+					}
+					//remove
+					obj_labels.forEach(function(entry) { scene.remove(entry); });
+					obj_labels = [];
+					obj_selected = null;
+				}
+			}
+			
+			function objectHighlighted(obj)
+			{
+				//popping out slice
+				obj.position = obj.pushPoint;
+				obj.material.color.set( obj.lightColor );
+				obj.material.opacity = 1.0;
+				
+				var lmesh = getMeshText(obj.labelText, 0.1, 0.015, 0xcccccc, "center");
+				lmesh.position = obj.labelPoint;
+				lmesh.position.z = 0.3;
+				lmesh.rotation.x = Math.PI * 10/180;
+				
+				scene.add( lmesh );
+				obj_labels.push( lmesh );
+			}
 			
 			function animate() {
 

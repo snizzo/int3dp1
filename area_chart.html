@@ -35,7 +35,7 @@
 			//last object selected (closest to camera)
 			var obj_selected = null;
                         
-			var renderer = new THREE.WebGLRenderer(/*{antialias: true}*/);
+			var renderer = new THREE.WebGLRenderer({antialias: true});
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			renderer.setClearColor( 0x111111 );
 			document.body.appendChild( renderer.domElement );
@@ -235,11 +235,13 @@
 											color: c,
 											specular: "#ffffff",
 											transparent:true,
-											opacity:0.85,
+											opacity:0.5,
 											shininess: 2,
 											shading: THREE.SmoothShading }  ) );
-				//adding labels to mesh
+				//adding custom props to mesh
 				rectMesh.labels = labels;
+				rectMesh.darkColor = c;
+				rectMesh.lightColor = sc;
 				objects.push(rectMesh);
 			}
 			
@@ -282,6 +284,8 @@
 						
 						//hiding old highlighted object's labels
 						if(obj_selected != null){
+							obj_selected.material.opacity = 0.5;
+							obj_selected.material.color.set( obj_selected.darkColor );
 							obj_selected.labels.forEach( function (l){
 								l.visible = false;
 							});
@@ -294,6 +298,8 @@
 					}
 				} else {
 					if(obj_selected != null){
+						obj_selected.material.opacity = 0.5;
+						obj_selected.material.color.set( obj_selected.darkColor );
 						obj_selected.labels.forEach( function (l){
 							l.visible = false;
 						});
@@ -309,9 +315,12 @@
 			
 			function objectHighlighted(obj)
 			{
+				obj.material.color.set( obj.lightColor );
+				obj.material.opacity = 0.75;
 				obj.labels.forEach( function (l) {
 					l.visible = true;
 				});
+				
 				
 			}
 			
