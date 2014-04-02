@@ -36,7 +36,7 @@
 			//last object selected (closest to camera)
 			var obj_selected = null;
 
-			var renderer = new THREE.WebGLRenderer(/*{ antialias: true }*/);
+			var renderer = new THREE.WebGLRenderer({ antialias: true });
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			renderer.setClearColor( 0x111111 );
 			document.body.appendChild( renderer.domElement );
@@ -217,13 +217,15 @@
 			function addCube ( h,c, sc) {
 				var geom = new THREE.CubeGeometry( 4, h, 4 );
 				cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
-																			ambient: c,
-																			color: c,
-																			specular: "#ffffff",
-																			transparent:true,
-																			opacity:0.85,
-																			shininess: 2,
-																			shading: THREE.FlatShading }  )  );
+											ambient: c,
+											color: c,
+											specular: "#ffffff",
+											transparent:true,
+											opacity:0.5,
+											shininess: 2,
+											shading: THREE.FlatShading }  )  );
+				cube.darkColor = c;
+				cube.lightColor = sc;
 				wcube = new THREE.BoxHelper( cube );
 				wcube.material.color.set( sc );
 
@@ -251,6 +253,11 @@
 						});
 						obj_labels = [];
 						
+						if(obj_selected!=null){
+							obj_selected.material.opacity = 0.5;
+							obj_selected.material.color.set( obj_selected.darkColor );
+						}
+						
 						//add new
 						objectHighlighted(intersects[ 0 ].object);
 						obj_selected = intersects[ 0 ].object;
@@ -258,6 +265,11 @@
 						
 					}
 				} else {
+					if(obj_selected!=null){
+						obj_selected.material.opacity = 0.5;
+						obj_selected.material.color.set( obj_selected.darkColor );
+						
+					}
 					//remove
 					obj_labels.forEach(function(entry) { scene.remove(entry); });
 					obj_labels = [];
@@ -271,6 +283,9 @@
 			{
 				var height = obj.geometry.height;
 				var value = getValue(height, maximum, maxexp);
+				
+				obj.material.color.set( obj.lightColor );
+				obj.material.opacity = 0.75;
 				
 				var lmesh = getMeshText(value.toString(), 2, 0.15, 0xcccccc, "center");
 				lmesh.position.x = obj.position.x;

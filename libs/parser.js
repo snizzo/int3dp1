@@ -77,6 +77,16 @@ function getNorm(h,max,maxexp)
 	return h/f;
 }
 
+function getSum(file)
+{
+	var sum = 0;
+	file["data"][0]["floats"].forEach(function(data) {;
+		sum += data;
+	});
+	
+	return sum;
+}
+
 function getValue(h,max,maxexp)
 {
 	var f = max/maxexp;
