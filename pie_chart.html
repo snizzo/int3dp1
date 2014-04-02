@@ -17,6 +17,7 @@
 		<script src="libs/three.min.js"></script>
 		<script src="libs/stats.min.js"></script>
 		<script src="libs/controls/OrbitControls.js"></script>
+		<script src="libs/controls/TrackballControls.js"></script>
 		<script src="libs/fonts/helvetiker_bold.typeface.js"></script>
 		<script src="libs/textutils.js"></script>
 		<script src="libs/parser.js"></script>
@@ -27,15 +28,39 @@
 		<script>
 			var scene = new THREE.Scene();
 			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-
+			
+			//object highlight list
+			var objects = [];
+			//obj labels is a list of all rendered labels for mouse hovering
+			var obj_labels = [];
+			//last object selected (closest to camera)
+			var obj_selected = null;
+			
 			var renderer = new THREE.WebGLRenderer({antialias: true});
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			renderer.setClearColor( 0xf0f0f0 );
 			document.body.appendChild( renderer.domElement );
 			
-			controls = new THREE.OrbitControls( camera );
+			controls = new THREE.TrackballControls( camera, renderer.domElement );
+			controls.zoomSpeed = 0.3;
+			controls.rotateSpeed = 0.05;
+			controls.minDistance = 1;
+			controls.maxDistance = 5;
+			controls.target = new THREE.Vector3(0, 0, 0);
 			controls.addEventListener( 'change', render );
 			
+			projector = new THREE.Projector();
+			
+			//setting lights
+			light1 = new THREE.DirectionalLight( 0xffffff, 1, 50 );
+			light1.position.x = 2;
+			light1.position.y = 4;
+			light1.position.z = 5;
+			light1.lookAt( new THREE.Vector3(0,0,0) );
+			scene.add( light1 );
+			
+			ambient = new THREE.AmbientLight( 0x333333 );
+			scene.add( ambient );
 			
 			var n = 1000;													// number of points (top circle)
 			
@@ -128,14 +153,21 @@
 
 			camera.position.z = 2;
 			
+			function animate() {
+
+				requestAnimationFrame( animate );
+				controls.update();
+				render();
+
+			}
+			
 			function render() {
-				//requestAnimationFrame(render);
 				
 				renderer.render(scene, camera);
 				stats.update();
 			}
 			
-			render();
+			animate();
 		</script>
 	</body>
 </html>
