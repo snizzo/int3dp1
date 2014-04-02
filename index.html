@@ -1,20 +1,112 @@
 <html>
-<head><title>Hello world!</title></head>
-<body>
-	<script src="libs/jquery-1.11.0.min.js"></script>
-	<script src="libs/parser.js"></script>
-	
-	<script>
-		/*
-			$.get( "csv/test.csv", function( data ) {
-				  $( "#container" ).html( data );
-				  alert( "Load was performed." );
+	<head><title>Charles' Charts</title>
+
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+			
+			canvas { 
+				width: 100%; 
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="libs/jquery-1.11.0.min.js"></script>
+		<script src="libs/parser.js"></script>
+		<script src="libs/libcharts.js"></script>
+		<script src="libs/dat.gui.min.js"></script>
+		<script src="libs/three.min.js"></script>
+		<script src="libs/stats.min.js"></script>
+		<script src="libs/controls/TrackballControls.js"></script>
+		<script src="libs/fonts/helvetiker_regular.typeface.js"></script>
+		<script src="libs/textutils.js"></script>
+		<script src="libs/utils.js"></script>
+		<script>
+			/*
+				$.get( "csv/test.csv", function( data ) {
+					$( "#container" ).html( data );
+					alert( "Load was performed." );
+					});
+			*/
+			var FizzyText = function() {
+				this.Type = 'Bar';
+				this.Example = 'Small';
+			};
+			
+			$( document ).ready(function() {
+				//threejs
+				var scene;
+				var camera;
+				var renderer;
+				initScene();
+				
+				//gui
+				var text = new FizzyText();
+				var gui = new dat.GUI();
+				var typeController = gui.add(text, 'Type', [ 'Bar', 'Area', 'Pie' ] );
+				var exampleController = gui.add(text, 'Example', [ 'Small', 'Medium', 'Big', 'Similar Values' ] );
+				
+				typeController.onFinishChange(function(value) {
+					generateChart(text.Type, text.Example);
 				});
-		*/
-		
-	</script>
-	<div id="container">
-		container?
-	</div>
-</body>
+				
+				exampleController.onFinishChange(function(value) {
+					generateChart(text.Type, text.Example);
+				});
+				
+				function generateChart(type, example)
+				{
+					clearScene();
+					switch(example){
+						case 'Small':
+							var csvfile = ['label,small,cpu,ram,mhz,fiber',
+							'2013,67,23,11,5,50',
+							'2012,20,10,13,65,8',
+							'2011,48,7,32,95,1',
+							].join('\n');
+							break;
+						case 'Medium':
+							var csvfile = ['label,medium,cpu,ram,mhz,fiber',
+							'2013,57,73,17,32,10',
+							'2012,20,10,13,65,8',
+							'2011,48,7,32,95,1',
+							].join('\n');
+							break;
+						case 'Big':
+							var csvfile = ['label,big,cpu,ram,mhz,fiber',
+							'2013,67,23,11,5,50',
+							'2012,20,10,13,65,8',
+							'2011,48,7,32,95,1',
+							].join('\n');
+							break;
+						case 'Similar Values':
+							var csvfile = ['label,similar,cpu,ram,mhz,fiber',
+							'2013,67,23,11,5,50',
+							'2012,20,10,13,65,8',
+							'2011,48,7,32,95,1',
+							].join('\n');
+							break;
+						default:
+							break;
+					}
+					var file = fromCsvToAssociative(csvfile);
+					
+					if(type == 'Bar'){
+						barChart(file);
+					} else if (type == 'Area') {
+						areaChart(file);
+					} else if (type == 'Pie') {
+						pieChart(file);
+					} else {
+						alert('unknown error!');
+					}
+				}
+			});
+		</script>
+	</body>
 </html>

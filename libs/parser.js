@@ -58,7 +58,7 @@ function fromCsvToAssociative(csv)
 function getMaxValue(arr)
 {
 	var allvalues = [];
-	file["data"].forEach(function(entry) {
+	arr["data"].forEach(function(entry) {
 		//console.log(entry["label"]);
 		//console.log(entry["floats"]);
 		
