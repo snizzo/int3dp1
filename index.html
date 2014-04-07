@@ -49,7 +49,7 @@
 				var text = new FizzyText();
 				var gui = new dat.GUI();
 				var typeController = gui.add(text, 'Type', [ 'Bar', 'Area', 'Pie' ] );
-				var exampleController = gui.add(text, 'Example', [ 'Small', 'Medium', 'Big', 'Similar Values' ] );
+				var exampleController = gui.add(text, 'Example', [ 'Small', 'Medium', 'Big', 'Similar Values', 'Wide labels' ] );
 				
 				typeController.onFinishChange(function(value) {
 					generateChart(text.Type, text.Example);
@@ -62,38 +62,33 @@
 				function generateChart(type, example)
 				{
 					clearScene();
+					
+					var filestring;
+					
 					switch(example){
 						case 'Small':
-							var csvfile = ['label,small,cpu,ram,mhz,fiber',
-							'2013,67,23,11,5,50',
-							'2012,20,10,13,65,8',
-							'2011,48,7,32,95,1',
-							].join('\n');
+							filestring = "csv/small.csv";
 							break;
 						case 'Medium':
-							var csvfile = ['label,medium,cpu,ram,mhz,fiber,cpu,ram,mhz,fiber',
-							'2013,57,73,17,32,10,17,32,10',
-							'2012,20,10,13,65,8,17,32,10',
-							'2011,48,7,32,95,1,17,32,10',
-							].join('\n');
+							filestring = "csv/medium.csv";
 							break;
 						case 'Big':
-							var csvfile = ['label,big,cpu,ram,mhz,fiber',
-							'2013,67,23,11,5,50',
-							'2012,20,10,13,65,8',
-							'2011,48,7,32,95,1',
-							].join('\n');
+							filestring = "csv/big.csv";
 							break;
 						case 'Similar Values':
-							var csvfile = ['label,similar,cpu,ram,mhz,fiber',
-							'2013,67,23,11,5,50',
-							'2012,20,10,13,65,8',
-							'2011,48,7,32,95,1',
-							].join('\n');
+							filestring = "csv/similar.csv";
+							break;
+						case 'Wide labels':
+							filestring = "csv/wide_labels.csv";
 							break;
 						default:
 							break;
 					}
+					
+					$.get(filestring, function (data) { showChart(data,type); });
+				}
+				function showChart(csvfile, type)
+				{
 					var file = fromCsvToAssociative(csvfile);
 					
 					if(type == 'Bar'){
