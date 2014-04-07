@@ -103,14 +103,14 @@ function barChart(file)
 	
 	lookAtChart(r, n);
 	
-	var maximum = getMaxValue(file);
+	var maximum = getMaxValue(file);		//maximum value of the bars
 	var maxexp = 30;
 	var material, geometry, mesh;
 			
 	darkgrey = new THREE.MeshPhongMaterial( { ambient: 0x444444, color: 0x444444, specular: 0x444444, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
 	lightgrey = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0x555555, specular: 0x555555, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
 	
-	//add back panel
+	//draw back panel
 	var previous = false;
 	for(i=0;i<10;i++){
 		var geometry = new THREE.PlaneGeometry( n*8, 3 );
@@ -127,7 +127,7 @@ function barChart(file)
 		scene.objlist.push( mesh );
 	}
 	
-	//left panel
+	//draw left panel
 	var previous = false;
 	for(i=0;i<10;i++){
 		var geometry = new THREE.PlaneGeometry( r*8, 3 );
@@ -150,7 +150,6 @@ function barChart(file)
 		lmesh.position.x = -1;
 		lmesh.position.y = -0.5+(3*i);
 		lmesh.position.z = r*8;
-		//lmesh.rotation.y = Math.PI * 90/180;
 		scene.add( lmesh );
 		scene.objlist.push( lmesh );
 	}
@@ -162,12 +161,11 @@ function barChart(file)
 	lmesh.position.x = -1;
 	lmesh.position.y = 29.5;
 	lmesh.position.z = r*8;
-	//lmesh.rotation.y = Math.PI * 90/180;
 	scene.add( lmesh );
 	scene.objlist.push( lmesh );
 	
 	var previous = false;
-	//base
+	//draw base
 	for (i=0; i<r; i++) {
 		for (j=0; j<n; j++) {
 			var geometry = new THREE.PlaneGeometry( 8, 8 );
@@ -208,9 +206,6 @@ function barChart(file)
 		var shinecolor = lcolors[1];
 		
 		for (j=0; j<n; j++) {
-			//console.log(file["data"][i]["floats"][j]);
-			//console.log(getNorm(file["data"][i]["floats"][j],maximum));
-			
 			addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor );
 			cube.position.x = wcube.position.x = (j+1)*8-4;
 			cube.position.y = wcube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
@@ -232,7 +227,7 @@ function barChart(file)
 
 	$( window ).bind( "resize", onWindowResize);
 	
-	//highlights
+	//highlights on user input
 	$( document ).bind( "mousemove", onDocumentMouseMove);
 	
 	function addCube ( h,c, sc) {
@@ -353,12 +348,12 @@ function areaChart(file)
 	//last object selected (closest to camera)
 	var obj_selected = null;
 	
-	var r = file["data"].length;											//number of rows
-	var n = file["data"][0]["floats"].length;								//number of bars per row
+	var r = file["data"].length; //number of rows
+	var n = file["data"][0]["floats"].length; //number of bars per row
 	
 	lookAtChart(r, n);
 	
-	// ground
+	//draw ground
 	
 	var material, geometry, mesh;
 	var maximum = getMaxValue(file);
@@ -367,7 +362,7 @@ function areaChart(file)
 	darkgrey = new THREE.MeshPhongMaterial( { ambient: 0x444444, color: 0x444444, specular: 0x444444, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
 	lightgrey = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0x555555, specular: 0x555555, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
 	
-	//add back panel
+	//draw back panel
 	var previous = false;
 	for(i=0;i<10;i++){
 		var geometry = new THREE.PlaneGeometry( n*8, 3 );
@@ -384,7 +379,7 @@ function areaChart(file)
 		scene.objlist.push(mesh);
 	}
 	
-	//left panel
+	//draw left panel
 	var previous = false;
 	for(i=0;i<10;i++){
 		var geometry = new THREE.PlaneGeometry( r*8, 3 );
@@ -407,7 +402,6 @@ function areaChart(file)
 		lmesh.position.x = -1;
 		lmesh.position.y = -0.5+(3*i);
 		lmesh.position.z = r*8;
-		//lmesh.rotation.y = Math.PI * 90/180;
 		scene.add( lmesh );
 		scene.objlist.push(lmesh);
 	}
@@ -419,12 +413,11 @@ function areaChart(file)
 	lmesh.position.x = -1;
 	lmesh.position.y = 29.5;
 	lmesh.position.z = r*8;
-	//lmesh.rotation.y = Math.PI * 90/180;
 	scene.add( lmesh );
 	scene.objlist.push(lmesh);
 	
 	var previous = false;
-	//base
+	// draw base
 	for (i=0; i<r; i++) {
 		for (j=0; j<n; j++) {
 			var geometry = new THREE.PlaneGeometry( 8, 8 );
@@ -447,7 +440,6 @@ function areaChart(file)
 	// add labels
 	
 	for (i=0; i<r; i++) {
-		
 		
 		var lcolors = getRandomColor(i);
 		var linecolor = lcolors[0];
@@ -511,7 +503,7 @@ function areaChart(file)
 		}
 		rectShape.lineTo( (n-1)*8, 0 );
 		rectShape.lineTo( 0, 0 );
-
+		//set settings for the extrusion of the area
 		var extrusionSettings = {
 			amount: 1, size: 1, height: 0, curveSegments: 10,
 			bevelThickness: 0.1, bevelSize: 0.1, bevelEnabled: true,
@@ -627,11 +619,11 @@ function pieChart(file)
 	var d = [0]; // d = array containing z rotations of the slices
 	var c = 0;
 	
-	for (i=1; i<l.length; i++) {
+	for (i=1; i<l.length; i++) {		// compute rotations and add to d
 		d.push (c += 360/s*l[i-1]);
 	}
 	
-	for (i=0; i<l.length; i++) {
+	for (i=0; i<l.length; i++) {		
 		var lcolors = getRandomColor(i);
 		var linecolor = lcolors[0];
 		var shinecolor = lcolors[1];
@@ -661,8 +653,7 @@ function pieChart(file)
 		objects.push( mesh );
 	}
 	
-	//console.log(getMidSlicePoint(mesh, 0.5));
-	//
+	// get middle point useful for adding labels
 	function getMidSlicePoint (mesh, f) {
 		var x = f*Math.cos(Math.PI*mesh.degrees/180);
 		var y = f*Math.sin(Math.PI*mesh.degrees/180);
@@ -670,7 +661,7 @@ function pieChart(file)
 		return new THREE.Vector3(x,y,0);
 	}
 	
-	//
+	// add slices and wireframe skeleton on the edges
 	function addSlice ( n_v, linecolor, shinecolor ) {
 		var material, geometry, mesh
 		var rectShape = new THREE.Shape();
@@ -680,12 +671,14 @@ function pieChart(file)
 		var lineMaterial1 = new THREE.LineBasicMaterial({color: shinecolor});
 		var lineGeometry1 = new THREE.Geometry();
 		
+		// lineGeometry draws the slice, lineGeometry1 draws wireframe
 		rectShape.moveTo( 0,0 );
 		lineGeometry.vertices.push( new THREE.Vector3( 1, 0, 0.2 ) );
 		lineGeometry.vertices.push( new THREE.Vector3( 1, 0, 0 ) );
 		lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
 		lineGeometry1.vertices.push( new THREE.Vector3( 0, 0, 0.2 ) );
 		
+		// points of the geometries are pushed based on cos and sin functions
 		for (j=0; j<n_v-3; j++) {
 			var x = Math.cos(Math.PI * (degrees*j/180));
 			var y = Math.sin(Math.PI * (degrees*j/180));
@@ -729,7 +722,7 @@ function pieChart(file)
 		
 		meshGeom.add( line );
 		meshGeom.add( line1 );
-		//console.log(meshGeom.degrees)
+		
 		return meshGeom;
 	}
 	
