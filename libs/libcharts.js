@@ -398,7 +398,7 @@ function areaChart(file)
 		
 		//add labels for counting efficiently
 		var value = (maximum/10)*i;
-		var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc, "right");
+		var lmesh = getMeshText((Math.round(value*100)/100).toString(), 1.1, 0.15, 0xcccccc, "right");
 		lmesh.position.x = -1;
 		lmesh.position.y = -0.5+(3*i);
 		lmesh.position.z = r*8;
@@ -409,7 +409,7 @@ function areaChart(file)
 	//draw maximum label
 	//add labels for counting efficiently
 	var value = maximum;
-	var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc, "right");
+	var lmesh = getMeshText((Math.round(value*100)/100).toString(), 1.1, 0.15, 0xcccccc, "right");
 	lmesh.position.x = -1;
 	lmesh.position.y = 29.5;
 	lmesh.position.z = r*8;
