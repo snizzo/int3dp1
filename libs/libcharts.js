@@ -146,7 +146,7 @@ function barChart(file)
 		
 		//add labels for counting efficiently
 		var value = (maximum/10)*i;
-		var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc, "right");
+		var lmesh = getMeshText((Math.round(value*100)/100).toString(), 1.1, 0.15, 0xcccccc, "right");
 		lmesh.position.x = -1;
 		lmesh.position.y = -0.5+(3*i);
 		lmesh.position.z = r*8;
@@ -158,7 +158,7 @@ function barChart(file)
 	//draw maximum label
 	//add labels for counting efficiently
 	var value = maximum;
-	var lmesh = getMeshText(value.toString(), 1.1, 0.15, 0xcccccc, "right");
+	var lmesh = getMeshText((Math.round(value*100)/100).toString(), 1.1, 0.15, 0xcccccc, "right");
 	lmesh.position.x = -1;
 	lmesh.position.y = 29.5;
 	lmesh.position.z = r*8;
@@ -491,7 +491,6 @@ function areaChart(file)
 			label.position.x = j*8+4;
 			label.position.y = height+1;
 			label.position.z = i*8+3;
-			label.rotation = camera.rotation;
 			scene.add( label );
 			scene.objlist.push(label);
 			//setting is to invisible by default
