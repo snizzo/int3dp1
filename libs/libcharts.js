@@ -25,6 +25,12 @@ function initScene()
 	scene.add( ambient );
 	
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
+	
+	controls.zoomSpeed = 0.3;
+	controls.rotateSpeed = 0.05;
+	controls.minDistance = 2;
+	controls.maxDistance = 500;
+	
 	controls.addEventListener( 'change', render );
 	
 	stats = new Stats();
@@ -36,7 +42,6 @@ function initScene()
 }
 
 function animate() {
-
 	requestAnimationFrame( animate );
 	controls.update();
 	render();
@@ -61,6 +66,29 @@ function clearScene()
 	scene.objlist = [];
 }
 
+function setAntialiasing(v)
+{
+	renderer.antialias = v;
+}
+
+
+function lookAtChart(r, n)
+{
+	camera.rotation.y = 0;
+	camera.rotation.x = 0;
+	camera.rotation.z = 0;
+	camera.position = new THREE.Vector3(n*8+4, r*8+4, 50);
+	camera.lookAt(new THREE.Vector3(0,0,0));
+	controls.target = new THREE.Vector3(n*4, 10, r*4);
+}
+
+function lookAtPieChart()
+{
+	camera.position = new THREE.Vector3(0, 2, 0);
+	camera.lookAt(new THREE.Vector3(0,0,0));
+	controls.target = new THREE.Vector3(0, 0, 0);
+}
+
 function barChart(file)
 {	
 	//object highlight list
@@ -73,11 +101,7 @@ function barChart(file)
 	var r = file["data"].length; //number of rows
 	var n = file["data"][0]["floats"].length; //number of bars per row
 	
-	controls.zoomSpeed = 0.3;
-	controls.rotateSpeed = 0.05;
-	controls.minDistance = 5;
-	controls.maxDistance = 200;
-	controls.target = new THREE.Vector3(n*4, 0, r*4);
+	lookAtChart(r, n);
 	
 	var maximum = getMaxValue(file);
 	var maxexp = 30;
@@ -206,9 +230,6 @@ function barChart(file)
 		}
 	}
 
-	camera.position.z = 40
-	camera.position.y = 10
-	camera.position.x = n*4
 	$( window ).bind( "resize", onWindowResize);
 	
 	//highlights
@@ -335,11 +356,7 @@ function areaChart(file)
 	var r = file["data"].length;											//number of rows
 	var n = file["data"][0]["floats"].length;								//number of bars per row
 	
-	controls.zoomSpeed = 0.3;
-	controls.rotateSpeed = 0.05;
-	controls.minDistance = 5;
-	controls.maxDistance = 200;
-	controls.target = new THREE.Vector3(n*4, 0, r*4);
+	lookAtChart(r, n);
 	
 	// ground
 	
@@ -518,10 +535,6 @@ function areaChart(file)
 		objects.push(rectMesh);
 	}
 	
-	camera.position.z = 50
-	camera.position.y = 10
-	camera.position.x = n*4
-	
 	//resize render view when window is resized
 	// onWindowResize is located in utils.js
 	$( window ).bind( "resize", onWindowResize);
@@ -599,11 +612,7 @@ function pieChart(file)
 	//last object selected (closest to camera)
 	var obj_selected = null;
 	
-	controls.zoomSpeed = 0.3;
-	controls.rotateSpeed = 0.05;
-	controls.minDistance = 1;
-	controls.maxDistance = 5;
-	controls.target = new THREE.Vector3(0, 0, 0);
+	lookAtPieChart();
 	
 	var n = 1000; // number of points (top circle)
 	
@@ -731,7 +740,6 @@ function pieChart(file)
 	stats.domElement.style.top = '0px';
 	document.body.appendChild( stats.domElement );
 
-	camera.position.z = 2;
 	//dynamic resize od viewport
 	$( window ).bind( "resize", onWindowResize);
 	//highlights
