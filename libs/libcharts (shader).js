@@ -1,10 +1,8 @@
+
 function initScene()
 {
 	scene = new THREE.Scene();
 	scene.objlist = [];
-	scene.cubes = null;
-	scene.counter = 0;
-	scene.type = "";
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
 	//var camera = new THREE.OrthographicCamera( window.innerWidth / - 20, window.innerWidth / 20, window.innerHeight / 20, window.innerHeight / - 20, 1, 1000 );
 
@@ -41,40 +39,18 @@ function initScene()
 	document.body.appendChild( stats.domElement );
 	
 	animate();
-
 }
-		
+
 function animate() {
 	requestAnimationFrame( animate );
-	controls.update();		
+	controls.update();
 	render();
 }
 
 function render() {
-	if (scene.counter < 1) {
-		scene.counter += 0.005;
-	}
-	if (scene.type == "bar" || scene.type == "area") {
-		updateBars(scene.counter);
-	}
-	if (scene.type == "pie") {
-		updateSlices(scene.counter);
-	}
+	
 	renderer.render(scene, camera);
 	stats.update();
-}
-
-function updateBars(t) {
-	if(scene.cubes!=null){
-		scene.cubes.scale.y = t;
-	}
-}
-function updateSlices(t) {
-	if(scene.cubes!=null){
-		scene.cubes.scale.x = t;
-		scene.cubes.scale.y = t;
-		scene.cubes.scale.z = t;
-	}
 }
 
 function clearScene()
@@ -88,7 +64,6 @@ function clearScene()
 	}
 	
 	scene.objlist = [];
-	scene.counter = 0;
 }
 
 function setAntialiasing(v)
@@ -109,7 +84,7 @@ function lookAtChart(r, n)
 
 function lookAtPieChart()
 {
-	camera.position = new THREE.Vector3(0, 1, 3);
+	camera.position = new THREE.Vector3(0, 2, 0);
 	camera.lookAt(new THREE.Vector3(0,0,0));
 	controls.target = new THREE.Vector3(0, 0, 0);
 }
@@ -131,8 +106,6 @@ function barChart(file)
 	var maximum = getMaxValue(file);		//maximum value of the bars
 	var maxexp = 30;
 	var material, geometry, mesh;
-	
-	scene.type = "bar";
 			
 	darkgrey = new THREE.MeshPhongMaterial( { ambient: 0x444444, color: 0x444444, specular: 0x444444, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
 	lightgrey = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0x555555, specular: 0x555555, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
@@ -212,8 +185,6 @@ function barChart(file)
 		}
 	}
 	
-	scene.cubes = new THREE.Mesh;
-	
 	for (i=0; i<r; i++) {
 		
 		//for first line, add labels
@@ -234,12 +205,43 @@ function barChart(file)
 		var linecolor = lcolors[0];
 		var shinecolor = lcolors[1];
 		
+		var uniforms = {
+				Ks:	{ type: "v3", value: new THREE.Vector3() },
+				Kd:	{ type: "v3", value: new THREE.Vector3() },
+				ambient:	{ type: "v3", value: new THREE.Vector3() },
+				pointLightPosition:	{ type: "v3", value: new THREE.Vector3() },
+				lightPower:	{ type: "v3", value: new THREE.Vector3() },
+				s: {type: "f", value: 0},
+				m: {type: "f", value: 0}
+			};
+								
+		var vs = document.getElementById("vertex").textContent;
+		var fs = document.getElementById("ct-fragment").textContent;
+		
+		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
+			
+		light = new THREE.Mesh( new THREE.SphereGeometry( 1, 16, 16), new THREE.MeshBasicMaterial ({color: 0xffff00, wireframe:true}));
+		light.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
+		scene.add( light );
+			
+		uniforms.Ks.value = new THREE.Vector3( 0.95, 0.93, 0.88 );
+		uniforms.Kd.value = (new THREE.Vector3( 0.50754, 0.50754, 0.50754 ));
+		uniforms.ambient.value = (new THREE.Vector3( 0.19225, 0.19225, 0.19225 ));
+		uniforms.pointLightPosition.value = new THREE.Vector3(light.position.x, light.position.y, light.position.z);
+		uniforms.lightPower.value = new THREE.Vector3( 70000.0, 70000.0, 70000.0 );
+		uniforms.s.value = 0.5;
+		uniforms.m.value = 0.1;
+			
 		for (j=0; j<n; j++) {
 			addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor );
 			cube.position.x = wcube.position.x = (j+1)*8-4;
 			cube.position.y = wcube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
 			cube.position.z = wcube.position.z = (i+1)*8-4;
-			scene.cubes.add( cube );
+			
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			
+			scene.add( cube );
+			scene.objlist.push( cube );
 			cube.add( wcube );
 			if(j==(n-1)){
 				var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left");
@@ -251,8 +253,6 @@ function barChart(file)
 				scene.objlist.push( lmesh );
 			}
 		}
-		scene.add( scene.cubes );
-		scene.objlist.push( scene.cubes );
 	}
 
 	$( window ).bind( "resize", onWindowResize);
@@ -261,20 +261,23 @@ function barChart(file)
 	$( document ).bind( "mousemove", onDocumentMouseMove);
 	
 	function addCube ( h,c, sc) {
+					
 		var geom = new THREE.CubeGeometry( 4, h, 4 );
-		cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
+		/*cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
 									ambient: c,
 									color: c,
 									specular: "#ffffff",
 									transparent:true,
-									opacity:0.5,
+									//opacity:0.5,
 									shininess: 2,
-									shading: THREE.FlatShading }  )  );
+									shading: THREE.FlatShading }  )  );*/
+
+		cube = new THREE.Mesh( geom, cubeMaterial );
+		
 		cube.darkColor = c;
 		cube.lightColor = sc;
 		wcube = new THREE.BoxHelper( cube );
 		wcube.material.color.set( sc );
-		
 		objects.push(cube);
 	}
 	
@@ -369,6 +372,16 @@ function barChart(file)
 	}
 }
 
+	// per l'animazione
+
+			function updateBars(s)
+				{
+					cube.position.x = 100;
+					cube.scale.y = 2;
+				}
+				
+			//
+			
 function areaChart(file)
 {
 	//object highlight list
@@ -382,8 +395,6 @@ function areaChart(file)
 	var n = file["data"][0]["floats"].length; //number of bars per row
 	
 	lookAtChart(r, n);
-	
-	scene.type = "area";
 	
 	//draw ground
 	
@@ -470,7 +481,7 @@ function areaChart(file)
 	}
 	
 	// add labels
-	scene.cubes = new THREE.Mesh;
+	
 	for (i=0; i<r; i++) {
 		
 		var lcolors = getRandomColor(i);
@@ -494,11 +505,9 @@ function areaChart(file)
 		addShape ( i, linecolor, shinecolor );
 		rectMesh.position.x = 4;
 		rectMesh.position.z = (i+1)*8-6;
-		scene.cubes.add( rectMesh );
-		
+		scene.add( rectMesh );
+		scene.objlist.push(rectMesh);
 	}
-	scene.add( scene.cubes );
-	scene.objlist.push( scene.cubes );
 	
 	function addShape ( i, c, sc ) {
 		var rectShape = new THREE.Shape();
@@ -558,7 +567,6 @@ function areaChart(file)
 		rectMesh.darkColor = c;
 		rectMesh.lightColor = sc;
 		objects.push(rectMesh);
-		
 	}
 	
 	//resize render view when window is resized
@@ -624,6 +632,8 @@ function areaChart(file)
 		obj.labels.forEach( function (l) {
 			l.visible = true;
 		});
+		
+		
 	}
 }
 
@@ -637,8 +647,6 @@ function pieChart(file)
 	var obj_selected = null;
 	
 	lookAtPieChart();
-	
-	scene.type = "pie";
 	
 	var n = 1000; // number of points (top circle)
 	
@@ -657,8 +665,6 @@ function pieChart(file)
 	for (i=1; i<l.length; i++) {		// compute rotations and add to d
 		d.push (c += 360/s*l[i-1]);
 	}
-	
-	scene.cubes = new THREE.Mesh;
 	
 	for (i=0; i<l.length; i++) {		
 		var lcolors = getRandomColor(i);
@@ -685,7 +691,8 @@ function pieChart(file)
 		
 		mesh.rotation.z = Math.PI*d[i]/180;
 		
-		scene.cubes.add( mesh );
+		scene.add( mesh );
+		scene.objlist.push(mesh);
 		objects.push( mesh );
 	}
 	
@@ -696,9 +703,6 @@ function pieChart(file)
 		
 		return new THREE.Vector3(x,y,0);
 	}
-	
-	scene.add( scene.cubes );
-	scene.objlist.push( scene.cubes );
 	
 	// add slices and wireframe skeleton on the edges
 	function addSlice ( n_v, linecolor, shinecolor ) {
