@@ -114,8 +114,9 @@ function lookAtPieChart()
 	controls.target = new THREE.Vector3(0, 0, 0);
 }
 
-function barChart(file)
+function barChart(file, mat)
 {	
+	//console.log("mat is: "+mat);
 	//object highlight list
 	var objects = [];
 	//obj labels is a list of all rendered labels for mouse hovering
@@ -275,7 +276,9 @@ function barChart(file)
 			cube.position.y = wcube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
 			cube.position.z = wcube.position.z = (i+1)*8-4;
 			scene.cubes.add( cube );
-			//cube.add( wcube );////////////////////////////////////////////////////////// per rimettere il wireframe
+			if(mat!="Metals"){
+				cube.add( wcube );////////////////////////////////////////////////////////// per rimettere il wireframe
+			}
 			if(j==(n-1)){
 				var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left");
 				lmesh.position.x = (j+1)*8+1;
@@ -297,15 +300,18 @@ function barChart(file)
 	
 	function addCube ( h,c, sc) {
 		var geom = new THREE.CubeGeometry( 4, h, 4 );
-		/*cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
-									ambient: c,
-									color: c,
-									specular: "#ffffff",
-									transparent:true,
-									opacity:0.5,
-									shininess: 2,
-									shading: THREE.FlatShading }  )  );*/
-		cube = new THREE.Mesh( geom, cubeMaterial );
+		if(mat!="Metals"){
+			cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
+										ambient: c,
+										color: c,
+										specular: "#ffffff",
+										transparent:true,
+										opacity:0.5,
+										shininess: 2,
+										shading: THREE.FlatShading }  )  );
+		} else {
+			cube = new THREE.Mesh( geom, cubeMaterial );
+		}
 		
 		cube.darkColor = c;
 		cube.lightColor = sc;
@@ -406,7 +412,7 @@ function barChart(file)
 	}
 }
 
-function areaChart(file)
+function areaChart(file, mat)
 {
 	//object highlight list
 	var objects = [];
@@ -609,15 +615,18 @@ function areaChart(file)
 		};
 		
 		var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
-		/*rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshPhongMaterial( {
-									ambient: c,
-									color: c,
-									specular: "#ffffff",
-									transparent:true,
-									opacity:0.5,
-									shininess: 2,
-									shading: THREE.SmoothShading }  ) );*/
-		rectMesh = new THREE.Mesh( rectGeom, cubeMaterial );
+		if(mat!="Metals"){
+			rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshPhongMaterial( {
+										ambient: c,
+										color: c,
+										specular: "#ffffff",
+										transparent:true,
+										opacity:0.5,
+										shininess: 2,
+										shading: THREE.SmoothShading }  ) );
+		} else {
+			rectMesh = new THREE.Mesh( rectGeom, cubeMaterial );
+		}
 		//adding custom props to mesh
 		rectMesh.labels = labels;
 		rectMesh.darkColor = c;
@@ -692,7 +701,7 @@ function areaChart(file)
 	}
 }
 
-function pieChart(file)
+function pieChart(file, mat)
 {
 	//object highlight list
 	var objects = [];
@@ -774,7 +783,7 @@ function pieChart(file)
 		
 		var value = ((l[i]/sum)*100).toFixed(2)
 		
-		var mesh = addSlice ( fac, linecolor, shinecolor );
+		var mesh = addSlice ( fac, linecolor, shinecolor, cubeMaterial );
 		var pushPoint = getMidSlicePoint(mesh, 0.15);
 		var labelPoint = getMidSlicePoint(mesh, 0.65);
 		mesh.pushPoint = pushPoint;
@@ -801,7 +810,7 @@ function pieChart(file)
 	scene.objlist.push( scene.cubes );
 	
 	// add slices and wireframe skeleton on the edges
-	function addSlice ( n_v, linecolor, shinecolor ) {
+	function addSlice ( n_v, linecolor, shinecolor, cmat ) {
 		var material, geometry, mesh
 		var rectShape = new THREE.Shape();
 		
@@ -842,26 +851,27 @@ function pieChart(file)
 		var line1	 = new THREE.Line( lineGeometry1, lineMaterial1 );
 		
 		var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
-		/*
-		var meshGeomShineMaterial = new THREE.MeshPhongMaterial( {
-					ambient: linecolor,
-					color: linecolor,
-					specular: "#ffffff",
-					transparent:true,
-					opacity:0.85,
-					shininess: 2,
-					shading: THREE.FlatShading }  );*/
-		//meshGeomShineMaterial = new THREE.Mesh( geom, cubeMaterial );
+		if(mat!="Metals"){
+			var meshGeomShineMaterial = new THREE.MeshPhongMaterial( {
+						ambient: linecolor,
+						color: linecolor,
+						specular: "#ffffff",
+						transparent:true,
+						opacity:0.85,
+						shininess: 2,
+						shading: THREE.FlatShading }  );
+			var meshGeom = new THREE.Mesh( rectGeom, meshGeomShineMaterial);
+			meshGeom.add( line );//////////////////////////////////////////// per rimettere i wireframe
+			meshGeom.add( line1 );
+		} else {
+			var meshGeom = new THREE.Mesh( rectGeom, cmat);
+		}
 		
-		var meshGeom = new THREE.Mesh( rectGeom, cubeMaterial);//meshGeomShineMaterial );
 		if (i==l.length-1) {
 			meshGeom.degrees = (360+d[i])/2;
 		} else {
 			meshGeom.degrees = (d[i+1]+d[i])/2;
 		}
-		
-		//meshGeom.add( line );//////////////////////////////////////////// per rimettere i wireframe
-		//meshGeom.add( line1 );
 		
 		return meshGeom;
 	}
