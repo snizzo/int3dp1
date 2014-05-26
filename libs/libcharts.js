@@ -514,6 +514,33 @@ function areaChart(file)
 		var linecolor = lcolors[0];
 		var shinecolor = lcolors[1];
 		
+		var metalColors = getRandomVec3(i);
+		var diffuseColor = metalColors[0];
+		var specularColor = metalColors[1];
+		
+		var uniforms = {
+				Ks:	{ type: "v3", value: new THREE.Vector3() },
+				Kd:	{ type: "v3", value: new THREE.Vector3() },
+				ambient:	{ type: "v3", value: new THREE.Vector3() },
+				pointLightPosition:	{ type: "v3", value: new THREE.Vector3() },
+				lightPower:	{ type: "v3", value: new THREE.Vector3() },
+				s: {type: "f", value: 0},
+				m: {type: "f", value: 0}
+			};
+								
+		var vs = document.getElementById("vertex").textContent;
+		var fs = document.getElementById("ct-fragment").textContent;
+		
+		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
+
+		uniforms.Ks.value = specularColor;//new THREE.Vector3( 0.95, 0.93, 0.88 );
+		uniforms.Kd.value = diffuseColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
+		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));//( 0.19225, 0.19225, 0.19225 ));
+		uniforms.pointLightPosition.value = new THREE.Vector3( 40.0, 40.0, 40.0 )//(light.position.x, light.position.y, light.position.z);
+		uniforms.lightPower.value = new THREE.Vector3( 78000.0, 78000.0, 78000.0 );
+		uniforms.s.value = 1;//0.5;
+		uniforms.m.value = 1;//0.1;
+		
 		//for first line, add labels
 		if(i==(r-1)){
 			for (j=0; j<n; j++) {
@@ -582,14 +609,15 @@ function areaChart(file)
 		};
 		
 		var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
-		rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshPhongMaterial( {
+		/*rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshPhongMaterial( {
 									ambient: c,
 									color: c,
 									specular: "#ffffff",
 									transparent:true,
 									opacity:0.5,
 									shininess: 2,
-									shading: THREE.SmoothShading }  ) );
+									shading: THREE.SmoothShading }  ) );*/
+		rectMesh = new THREE.Mesh( rectGeom, cubeMaterial );
 		//adding custom props to mesh
 		rectMesh.labels = labels;
 		rectMesh.darkColor = c;
