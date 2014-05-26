@@ -234,13 +234,42 @@ function barChart(file)
 		var linecolor = lcolors[0];
 		var shinecolor = lcolors[1];
 		
+		var metalColor = getRandomVec3(i);
+		
+		var uniforms = {
+				Ks:	{ type: "v3", value: new THREE.Vector3() },
+				Kd:	{ type: "v3", value: new THREE.Vector3() },
+				ambient:	{ type: "v3", value: new THREE.Vector3() },
+				pointLightPosition:	{ type: "v3", value: new THREE.Vector3() },
+				lightPower:	{ type: "v3", value: new THREE.Vector3() },
+				s: {type: "f", value: 0},
+				m: {type: "f", value: 0}
+			};
+								
+		var vs = document.getElementById("vertex").textContent;
+		var fs = document.getElementById("ct-fragment").textContent;
+		
+		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
+			
+		light = new THREE.Mesh( new THREE.SphereGeometry( 1, 16, 16), new THREE.MeshBasicMaterial ({color: 0xffff00, wireframe:true}));
+		light.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
+		scene.add( light );
+			
+		uniforms.Ks.value = new THREE.Vector3( 0.95, 0.93, 0.88 );
+		uniforms.Kd.value = metalColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
+		uniforms.ambient.value = (new THREE.Vector3( 0.19225, 0.19225, 0.19225 ));
+		uniforms.pointLightPosition.value = new THREE.Vector3(light.position.x, light.position.y, light.position.z);
+		uniforms.lightPower.value = new THREE.Vector3( 80000.0, 80000.0, 80000.0 );
+		uniforms.s.value = 0.8;//0.5;
+		uniforms.m.value = 0;//0.1;
+		
 		for (j=0; j<n; j++) {
 			addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor );
 			cube.position.x = wcube.position.x = (j+1)*8-4;
 			cube.position.y = wcube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
 			cube.position.z = wcube.position.z = (i+1)*8-4;
 			scene.cubes.add( cube );
-			cube.add( wcube );
+			//cube.add( wcube );////////////////////////////////////////////////////////// per rimettere il wireframe
 			if(j==(n-1)){
 				var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left");
 				lmesh.position.x = (j+1)*8+1;
@@ -262,14 +291,16 @@ function barChart(file)
 	
 	function addCube ( h,c, sc) {
 		var geom = new THREE.CubeGeometry( 4, h, 4 );
-		cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
+		/*cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
 									ambient: c,
 									color: c,
 									specular: "#ffffff",
 									transparent:true,
 									opacity:0.5,
 									shininess: 2,
-									shading: THREE.FlatShading }  )  );
+									shading: THREE.FlatShading }  )  );*/
+		cube = new THREE.Mesh( geom, cubeMaterial );
+		
 		cube.darkColor = c;
 		cube.lightColor = sc;
 		wcube = new THREE.BoxHelper( cube );
