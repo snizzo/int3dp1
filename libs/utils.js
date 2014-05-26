@@ -45,7 +45,7 @@ function getRandomVec3(i) {
 	var r = i % dmetals.length;
 	var results = [];
 	results.push(dmetals[r]);
-	results.push(smetals[r])	;
+	results.push(smetals[r]);
 
 	return results;
 }
