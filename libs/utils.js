@@ -32,15 +32,22 @@ function getRandomColor(i) {
 }
 
 function getRandomVec3(i) {
-	var metals = [];
-	metals.push(new THREE.Vector3(0.8,0.8,0.1));
-	metals.push(new THREE.Vector3(0.6,0.6,0.6));
-	metals.push(new THREE.Vector3(0.85,0.3,0.1));
+	var dmetals = [];
+	dmetals.push(new THREE.Vector3(0.66,0.6,0.266666));
+	dmetals.push(new THREE.Vector3(0.5089,0.5089,0.5089));
+	dmetals.push(new THREE.Vector3(1.03868055,0.2472148,0.2472148));
 	
-	var r = i % metals.length;
-	var result = metals[r];
+	var smetals = [];
+	smetals.push(new THREE.Vector3(0.733333,0.6666666,0.6));
+	smetals.push(new THREE.Vector3(0.6666,0.6666,0.6666));
+	smetals.push(new THREE.Vector3(1.399995,0.6,0));
+	
+	var r = i % dmetals.length;
+	var results = [];
+	results.push(dmetals[r]);
+	results.push(smetals[r])	;
 
-	return result;
+	return results;
 }
 
 

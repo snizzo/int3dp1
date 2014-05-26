@@ -234,7 +234,9 @@ function barChart(file)
 		var linecolor = lcolors[0];
 		var shinecolor = lcolors[1];
 		
-		var metalColor = getRandomVec3(i);
+		var metalColors = getRandomVec3(i);
+		var diffuseColor = metalColors[0];
+		var specularColor = metalColors[1];
 		
 		var uniforms = {
 				Ks:	{ type: "v3", value: new THREE.Vector3() },
@@ -251,17 +253,21 @@ function barChart(file)
 		
 		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
 			
-		light = new THREE.Mesh( new THREE.SphereGeometry( 1, 16, 16), new THREE.MeshBasicMaterial ({color: 0xffff00, wireframe:true}));
+		/*light = new THREE.Mesh( new THREE.SphereGeometry( 1, 16, 16), new THREE.MeshBasicMaterial ({color: 0xffff00, wireframe:true}));
 		light.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
 		scene.add( light );
+		
+		pointLight = new THREE.PointLight( 0xffaa00, 2 );
+		pointLight.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
+		scene.add( pointLight );*/
 			
-		uniforms.Ks.value = new THREE.Vector3( 0.95, 0.93, 0.88 );
-		uniforms.Kd.value = metalColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
-		uniforms.ambient.value = (new THREE.Vector3( 0.19225, 0.19225, 0.19225 ));
-		uniforms.pointLightPosition.value = new THREE.Vector3(light.position.x, light.position.y, light.position.z);
-		uniforms.lightPower.value = new THREE.Vector3( 80000.0, 80000.0, 80000.0 );
-		uniforms.s.value = 0.8;//0.5;
-		uniforms.m.value = 0;//0.1;
+		uniforms.Ks.value = specularColor;//new THREE.Vector3( 0.95, 0.93, 0.88 );
+		uniforms.Kd.value = diffuseColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
+		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));//( 0.19225, 0.19225, 0.19225 ));
+		uniforms.pointLightPosition.value = new THREE.Vector3( 40.0, 40.0, 40.0 )//(light.position.x, light.position.y, light.position.z);
+		uniforms.lightPower.value = new THREE.Vector3( 78000.0, 78000.0, 78000.0 );
+		uniforms.s.value = 1;//0.5;
+		uniforms.m.value = 1;//0.1;
 		
 		for (j=0; j<n; j++) {
 			addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor );
