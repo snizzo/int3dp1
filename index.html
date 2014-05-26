@@ -100,6 +100,7 @@
 			var FizzyText = function() {
 				this.Type = 'Bar';
 				this.Example = 'Small';
+                this.Material = 'Metals';
 			};
 			
 			/*
@@ -117,16 +118,21 @@
 				var gui = new dat.GUI();
 				var typeController = gui.add(text, 'Type', [ 'Bar', 'Area', 'Pie' ] );
 				var exampleController = gui.add(text, 'Example', [ 'Small', 'Medium', 'Big', 'Similar Values', 'Wide labels' ] );
+                var materialController = gui.add(text, 'Material', [ 'Metals', 'Phong' ] );
 				
 				typeController.onFinishChange(function(value) {
-					generateChart(text.Type, text.Example);
+					generateChart(text.Type, text.Example, text.Material);
 				});
 				
 				exampleController.onFinishChange(function(value) {
-					generateChart(text.Type, text.Example);
+					generateChart(text.Type, text.Example, text.Material);
 				});
 				
-				function generateChart(type, example)
+				materialController.onFinishChange(function(value) {
+					generateChart(text.Type, text.Example, text.Material);
+				});
+				
+				function generateChart(type, example, mat)
 				{
 					clearScene();
 					
@@ -152,18 +158,19 @@
 							break;
 					}
 					
-					$.get(filestring, function (data) { showChart(data,type); });
+					$.get(filestring, function (data) { showChart(data,type,mat); });
 				}
-				function showChart(csvfile, type)
+				
+				function showChart(csvfile, type, mat)
 				{
 					var file = fromCsvToAssociative(csvfile);
 					
 					if(type == 'Bar'){
-						barChart(file);
+						barChart(file, mat);
 					} else if (type == 'Area') {
-						areaChart(file);
+						areaChart(file, mat);
 					} else if (type == 'Pie') {
-						pieChart(file);
+						pieChart(file, mat);
 					} else {
 						alert('unknown error!');
 					}
