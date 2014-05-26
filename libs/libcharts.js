@@ -341,8 +341,10 @@ function barChart(file, mat)
 				obj_labels = [];
 				
 				if(obj_selected!=null){
-					obj_selected.material.opacity = 0.5;
-					obj_selected.material.color.set( obj_selected.darkColor );
+					if(mat!="Metals"){
+						obj_selected.material.opacity = 0.5;
+						obj_selected.material.color.set( obj_selected.darkColor );
+					}
 				}
 				
 				//add new
@@ -353,9 +355,10 @@ function barChart(file, mat)
 			}
 		} else {
 			if(obj_selected!=null){
-				obj_selected.material.opacity = 0.5;
-				obj_selected.material.color.set( obj_selected.darkColor );
-				
+				if(mat!="Metals"){
+					obj_selected.material.opacity = 0.5;
+					obj_selected.material.color.set( obj_selected.darkColor );
+				}
 			}
 			//remove
 			obj_labels.forEach(function(entry) { scene.remove(entry); });
@@ -369,8 +372,10 @@ function barChart(file, mat)
 		var height = obj.geometry.height;
 		var value = getValue(height, maximum, maxexp);
 		
-		obj.material.color.set( obj.lightColor );
-		obj.material.opacity = 0.75;
+		if(mat!="Metals"){
+			obj.material.color.set( obj.lightColor );
+			obj.material.opacity = 0.75;
+		}
 		
 		var lmesh = getMeshText(value.toString(), 2, 0.15, 0xcccccc, "center");
 		lmesh.position.x = obj.position.x;
@@ -665,7 +670,9 @@ function areaChart(file, mat)
 				//hiding old highlighted object's labels
 				if(obj_selected != null){
 					obj_selected.material.opacity = 0.5;
-					obj_selected.material.color.set( obj_selected.darkColor );
+					if(mat!="Metals"){
+						obj_selected.material.color.set( obj_selected.darkColor );
+					}
 					obj_selected.labels.forEach( function (l){
 						l.visible = false;
 					});
@@ -679,7 +686,9 @@ function areaChart(file, mat)
 		} else {
 			if(obj_selected != null){
 				obj_selected.material.opacity = 0.5;
-				obj_selected.material.color.set( obj_selected.darkColor );
+				if(mat!="Metals"){
+					obj_selected.material.color.set( obj_selected.darkColor );
+				}
 				obj_selected.labels.forEach( function (l){
 					l.visible = false;
 				});
@@ -693,8 +702,10 @@ function areaChart(file, mat)
 	
 	function objectHighlighted(obj)
 	{
-		obj.material.color.set( obj.lightColor );
-		obj.material.opacity = 0.75;
+		if(mat!="Metals"){
+			obj.material.color.set( obj.lightColor );
+			obj.material.opacity = 0.75;
+		}
 		obj.labels.forEach( function (l) {
 			l.visible = true;
 		});
@@ -907,7 +918,9 @@ function pieChart(file, mat)
 				//popping in
 				if(obj_selected!=null){
 					obj_selected.position = new THREE.Vector3(0,0,0);
-					obj_selected.material.color.set( obj_selected.darkColor );
+					if(mat!="Metals"){
+						obj_selected.material.color.set( obj_selected.darkColor );
+					}
 					obj_selected.material.opacity = 0.85;
 				}
 				
@@ -921,7 +934,9 @@ function pieChart(file, mat)
 			if(obj_selected!=null){
 				//poppin in
 				obj_selected.position = new THREE.Vector3(0,0,0);
-				obj_selected.material.color.set( obj_selected.darkColor );
+				if(mat!="Metals"){
+					obj_selected.material.color.set( obj_selected.darkColor );
+				}
 				obj_selected.material.opacity = 0.85;
 				
 			}
@@ -936,7 +951,9 @@ function pieChart(file, mat)
 	{
 		//popping out slice
 		obj.position = obj.pushPoint;
-		obj.material.color.set( obj.lightColor );
+		if(mat!="Metals"){
+			obj.material.color.set( obj.lightColor );
+		}
 		obj.material.opacity = 1.0;
 		
 		var lmesh = getMeshText(obj.labelText, 0.1, 0.015, 0xcccccc, "center");
