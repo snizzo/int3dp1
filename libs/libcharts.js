@@ -732,6 +732,41 @@ function pieChart(file)
 		
 		var fac = n/s*l[i];
 		
+		var metalColors = getRandomVec3(i);
+		var diffuseColor = metalColors[0];
+		var specularColor = metalColors[1];
+		
+		var uniforms = {
+				Ks:	{ type: "v3", value: new THREE.Vector3() },
+				Kd:	{ type: "v3", value: new THREE.Vector3() },
+				ambient:	{ type: "v3", value: new THREE.Vector3() },
+				pointLightPosition:	{ type: "v3", value: new THREE.Vector3() },
+				lightPower:	{ type: "v3", value: new THREE.Vector3() },
+				s: {type: "f", value: 0},
+				m: {type: "f", value: 0}
+			};
+								
+		var vs = document.getElementById("vertex").textContent;
+		var fs = document.getElementById("ct-fragment").textContent;
+		
+		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
+			
+		/*light = new THREE.Mesh( new THREE.SphereGeometry( 1, 16, 16), new THREE.MeshBasicMaterial ({color: 0xffff00, wireframe:true}));
+		light.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
+		scene.add( light );
+		
+		pointLight = new THREE.PointLight( 0xffaa00, 2 );
+		pointLight.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
+		scene.add( pointLight );*/
+			
+		uniforms.Ks.value = specularColor;//new THREE.Vector3( 0.95, 0.93, 0.88 );
+		uniforms.Kd.value = diffuseColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
+		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));//( 0.19225, 0.19225, 0.19225 ));
+		uniforms.pointLightPosition.value = new THREE.Vector3( 20, 4.2, 40 )//(light.position.x, light.position.y, light.position.z);
+		uniforms.lightPower.value = new THREE.Vector3( 78000.0, 78000.0, 78000.0 );
+		uniforms.s.value = 1;//0.5;
+		uniforms.m.value = 1;//0.1;
+		
 		//too small chunks fix
 		if(fac < 4.5){
 			fac = 4.5;
@@ -807,7 +842,7 @@ function pieChart(file)
 		var line1	 = new THREE.Line( lineGeometry1, lineMaterial1 );
 		
 		var rectGeom = new THREE.ExtrudeGeometry( rectShape, extrusionSettings );
-		
+		/*
 		var meshGeomShineMaterial = new THREE.MeshPhongMaterial( {
 					ambient: linecolor,
 					color: linecolor,
@@ -815,17 +850,18 @@ function pieChart(file)
 					transparent:true,
 					opacity:0.85,
 					shininess: 2,
-					shading: THREE.FlatShading }  );
+					shading: THREE.FlatShading }  );*/
+		//meshGeomShineMaterial = new THREE.Mesh( geom, cubeMaterial );
 		
-		var meshGeom = new THREE.Mesh( rectGeom, meshGeomShineMaterial );
+		var meshGeom = new THREE.Mesh( rectGeom, cubeMaterial);//meshGeomShineMaterial );
 		if (i==l.length-1) {
 			meshGeom.degrees = (360+d[i])/2;
 		} else {
 			meshGeom.degrees = (d[i+1]+d[i])/2;
 		}
 		
-		meshGeom.add( line );
-		meshGeom.add( line1 );
+		//meshGeom.add( line );//////////////////////////////////////////// per rimettere i wireframe
+		//meshGeom.add( line1 );
 		
 		return meshGeom;
 	}
