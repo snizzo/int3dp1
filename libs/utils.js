@@ -31,6 +31,19 @@ function getRandomColor(i) {
 	return results;
 }
 
+function getRandomVec3(i) {
+	var metals = [];
+	metals.push(new THREE.Vector3(0.8,0.8,0.1));
+	metals.push(new THREE.Vector3(0.6,0.6,0.6));
+	metals.push(new THREE.Vector3(0.85,0.3,0.1));
+	
+	var r = i % metals.length;
+	var result = metals[r];
+
+	return result;
+}
+
+
 function onWindowResize() 
 {
 	camera.aspect = window.innerWidth / window.innerHeight;
