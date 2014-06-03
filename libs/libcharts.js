@@ -11,6 +11,8 @@ function initScene()
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setClearColor( 0x111111 );
+    renderer.shadowMapEnabled = true;
+    renderer.shadowMapType = THREE.PCFShadowMap;
 	document.body.appendChild( renderer.domElement );
 	
 	projector = new THREE.Projector();
@@ -26,6 +28,27 @@ function initScene()
 	var ambient = new THREE.AmbientLight( 0x333333 );
 	scene.add( ambient );
 	
+    //setting shadow map lights
+    var shadowlight = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 2, 1 );
+    shadowlight.position.set( -20, 20, 20 );
+    shadowlight.target.position.set( 0, 0, 0 );
+
+    shadowlight.castShadow = true;
+
+    shadowlight.shadowCameraNear = 1;
+    shadowlight.shadowCameraFar = 500;
+    shadowlight.shadowCameraFov = 50;
+
+    //shadowlight.shadowCameraVisible = true;
+
+    shadowlight.shadowBias = 0.0001;
+    shadowlight.shadowDarkness = 0.7;
+
+    shadowlight.shadowMapWidth = 2048;
+    shadowlight.shadowMapHeight = 2048;
+    scene.shadowlight = shadowlight;
+    scene.add( shadowlight );
+    
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
 	
 	controls.zoomSpeed = 0.3;
@@ -103,7 +126,12 @@ function lookAtChart(r, n)
 	camera.rotation.x = 0;
 	camera.rotation.z = 0;
 	camera.position = new THREE.Vector3(n*8+4, r*8+4, 50);
+    scene.shadowlight.position = new THREE.Vector3(n*16+4, r*16+4, 70);
+    if(scene.uniformslight != null){
+        scene.uniformslight.pointLightPosition.value = new THREE.Vector3(n*16+4, r*16+4, 70);
+    }
 	camera.lookAt(new THREE.Vector3(0,0,0));
+    scene.shadowlight.lookAt(new THREE.Vector3(0,0,0));
 	controls.target = new THREE.Vector3(n*4, 10, r*4);
 }
 
@@ -151,6 +179,8 @@ function barChart(file, mat)
 		}
 		mesh.position.y = 1.5+(3*i);
 		mesh.position.x += n*4;
+        mesh.castShadow = false;
+        mesh.receiveShadow = true;
 		scene.add(mesh);
 		scene.objlist.push( mesh );
 	}
@@ -169,6 +199,8 @@ function barChart(file, mat)
 		mesh.rotation.y = (Math.PI * 90/180);
 		mesh.position.y = 1.5+(3*i);
 		mesh.position.z += r*4;
+        mesh.castShadow = false;
+        mesh.receiveShadow = true;
 		scene.add(mesh);
 		scene.objlist.push( mesh );
 		
@@ -208,6 +240,8 @@ function barChart(file, mat)
 			mesh.position.y = 0;
 			mesh.position.z = (i+1)*8-4;
 			mesh.rotation.x = Math.PI * 90/180
+			mesh.castShadow = false;
+            mesh.receiveShadow = true;
 			scene.add( mesh );
 			scene.objlist.push( mesh );
 		}
@@ -248,6 +282,8 @@ function barChart(file, mat)
 				s: {type: "f", value: 0},
 				m: {type: "f", value: 0}
 			};
+        
+        scene.uniformslight = uniforms;
 								
 		var vs = document.getElementById("vertex").textContent;
 		var fs = document.getElementById("ct-fragment").textContent;
@@ -280,7 +316,11 @@ function barChart(file, mat)
 				cube.add( wcube );////////////////////////////////////////////////////////// per rimettere il wireframe
 			}
 			if(j==(n-1)){
-				var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left");
+                if(mat!="Metals"){
+                    var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left");
+                } else {
+                    var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left", cubeMaterial);
+                }
 				lmesh.position.x = (j+1)*8+1;
 				lmesh.position.y = 0;
 				lmesh.position.z = (i+1)*8-4;
@@ -309,8 +349,12 @@ function barChart(file, mat)
 										opacity:0.5,
 										shininess: 2,
 										shading: THREE.FlatShading }  )  );
+            cube.castShadow = true;
+            cube.receiveShadow = true;
 		} else {
 			cube = new THREE.Mesh( geom, cubeMaterial );
+            cube.castShadow = true;
+            cube.receiveShadow = true;
 		}
 		
 		cube.darkColor = c;
@@ -455,6 +499,8 @@ function areaChart(file, mat)
 		}
 		mesh.position.y = 1.5+(3*i);
 		mesh.position.x += n*4;
+        mesh.castShadow = false;
+        mesh.receiveShadow = true;
 		scene.add(mesh);
 		scene.objlist.push(mesh);
 	}
@@ -473,6 +519,8 @@ function areaChart(file, mat)
 		mesh.rotation.y = (Math.PI * 90/180);
 		mesh.position.y = 1.5+(3*i);
 		mesh.position.z += r*4;
+        mesh.castShadow = false;
+        mesh.receiveShadow = true;
 		scene.add(mesh);
 		scene.objlist.push(mesh);
 		
@@ -512,6 +560,8 @@ function areaChart(file, mat)
 			mesh.position.y = 0;
 			mesh.position.z = (i+1)*8-4;
 			mesh.rotation.x = Math.PI * 90/180
+			mesh.castShadow = false;
+            mesh.receiveShadow = true;
 			scene.add( mesh );
 			scene.objlist.push(mesh);
 		}
@@ -538,6 +588,7 @@ function areaChart(file, mat)
 				s: {type: "f", value: 0},
 				m: {type: "f", value: 0}
 			};
+        scene.uniformslight = uniforms;
 								
 		var vs = document.getElementById("vertex").textContent;
 		var fs = document.getElementById("ct-fragment").textContent;
@@ -601,7 +652,11 @@ function areaChart(file, mat)
 			
 			//if is writing the last element of a line, write also the line label
 			if(j==(n-1)){
-				var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, sc, "left");
+                if(mat!="Metals"){
+                    var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, sc, "left");
+                } else {
+                    var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, sc, "left", cubeMaterial);
+                }
 				lmesh.position.x = (j+1)*8+1;
 				lmesh.position.y = 0;
 				lmesh.position.z = (i+1)*8-4;
@@ -629,8 +684,12 @@ function areaChart(file, mat)
 										opacity:0.5,
 										shininess: 2,
 										shading: THREE.SmoothShading }  ) );
+            rectMesh.castShadow = true;
+            rectMesh.receiveShadow = true;
 		} else {
 			rectMesh = new THREE.Mesh( rectGeom, cubeMaterial );
+            rectMesh.castShadow = true;
+            rectMesh.receiveShadow = true;
 		}
 		//adding custom props to mesh
 		rectMesh.labels = labels;
