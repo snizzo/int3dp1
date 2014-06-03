@@ -1,7 +1,7 @@
 /*
  * This function generates text labels to be put in our graph
  */
-function getMeshText(text, sizevalue, heightvalue, colorcode, align)
+function getMeshText(text, sizevalue, heightvalue, colorcode, align, material)
 {
 	var textGeo = new THREE.TextGeometry( text, {
 
@@ -27,7 +27,7 @@ function getMeshText(text, sizevalue, heightvalue, colorcode, align)
 		textGeo.verticesNeedUpdate = true;
 	}
 	
-	var material = new THREE.MeshPhongMaterial({color: colorcode, shading: THREE.SmoothShading});
+	material = material || new THREE.MeshPhongMaterial({color: colorcode, shading: THREE.SmoothShading});
 	var mesh = new THREE.Mesh(textGeo, material);
 	
 	return mesh;
