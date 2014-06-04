@@ -6,6 +6,7 @@ function initScene()
 	scene.counter = 0;
 	scene.type = "";
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+	//var camera = new THREE.OrthographicCamera( window.innerWidth / - 20, window.innerWidth / 20, window.innerHeight / 20, window.innerHeight / - 20, 1, 1000 );
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -124,11 +125,8 @@ function lookAtChart(r, n)
 	camera.rotation.y = 0;
 	camera.rotation.x = 0;
 	camera.rotation.z = 0;
-	camera.position = new THREE.Vector3(n*8+4, r*8+4, 50);
+	camera.position = new THREE.Vector3(n*8+4, 50, r*8+4);
     scene.shadowlight.position = new THREE.Vector3(n*16+4, r*16+4, 70);
-    if(scene.uniformslight != null){
-        scene.uniformslight.pointLightPosition.value = new THREE.Vector3(n*16+4, r*16+4, 70);
-    }
 	camera.lookAt(new THREE.Vector3(0,0,0));
     scene.shadowlight.lookAt(new THREE.Vector3(0,0,0));
 	controls.target = new THREE.Vector3(n*4, 10, r*4);
@@ -272,34 +270,28 @@ function barChart(file, mat)
 		var specularColor = metalColors[1];
 		var lighterDiffuseColor = metalColors[2];
 		var lighterSpecularColor = metalColors[3];
-		
-		var uniforms = {
-				Ks:	{ type: "v3", value: new THREE.Vector3() },
-				Kd:	{ type: "v3", value: new THREE.Vector3() },
-				ambient:	{ type: "v3", value: new THREE.Vector3() },
-				pointLightPosition:	{ type: "v3", value: new THREE.Vector3() },
-				lightPower:	{ type: "v3", value: new THREE.Vector3() },
-				s: {type: "f", value: 0},
-				m: {type: "f", value: 0}
-			};
-        
-        scene.uniformslight = uniforms;
+            
+        function getUniforms()
+        {
+            var uniforms = {
+                Ks: { type: "v3", value: specularColor },
+                Kd: { type: "v3", value: diffuseColor },
+                ambient:    { type: "v3", value: new THREE.Vector3(0.3,0.3,0.3) },
+                pointLightPosition: { type: "v3", value: new THREE.Vector3(n*8+4, 50, r*8+4) },
+                lightPower: { type: "v3", value: new THREE.Vector3( 78000.0, 78000.0, 78000.0 ) },
+                s: {type: "f", value: 1},
+                m: {type: "f", value: 1}
+            };
+            
+            return uniforms;
+        }
 								
 		var vs = document.getElementById("vertex").textContent;
 		var fs = document.getElementById("ct-fragment").textContent;
-		
-		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
-			
-		uniforms.Ks.value = specularColor;
-		uniforms.Kd.value = diffuseColor;
-		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));
-		uniforms.pointLightPosition.value = new THREE.Vector3( 40.0, 40.0, 40.0 );
-		uniforms.lightPower.value = new THREE.Vector3( 78000.0, 78000.0, 78000.0 );
-		uniforms.s.value = 1;
-		uniforms.m.value = 1;
+
 		
 		for (j=0; j<n; j++) {
-			addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor, diffuseColor, specularColor, lighterDiffuseColor, lighterSpecularColor );
+			addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor, diffuseColor, specularColor, lighterDiffuseColor, lighterSpecularColor, vs, fs);
 			cube.position.x = wcube.position.x = (j+1)*8-4;
 			cube.position.y = wcube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
 			cube.position.z = wcube.position.z = (i+1)*8-4;
@@ -311,7 +303,8 @@ function barChart(file, mat)
                 if(mat!="Metals"){
                     var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left");
                 } else {
-                    var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left", cubeMaterial);
+                    var lmesh = getMeshText(file["data"][i]["label"], 2, 0.15, linecolor, "left", 
+                                                        new THREE.ShaderMaterial({ uniforms: getUniforms(), vertexShader: vs, fragmentShader: fs })); //specifying new material
                 }
 				lmesh.position.x = (j+1)*8+1;
 				lmesh.position.y = 0;
@@ -344,7 +337,7 @@ function barChart(file, mat)
             cube.castShadow = true;
             cube.receiveShadow = true;
 		} else {
-			cube = new THREE.Mesh( geom, cubeMaterial );
+			cube = new THREE.Mesh( geom, new THREE.ShaderMaterial({ uniforms: getUniforms(), vertexShader: vs, fragmentShader: fs }) );
             cube.castShadow = true;
             cube.receiveShadow = true;
 		}
@@ -384,7 +377,10 @@ function barChart(file, mat)
 					if(mat!="Metals"){
 						obj_selected.material.opacity = 0.5;
 						obj_selected.material.color.set( obj_selected.darkColor );
-					}
+					} else {
+                        obj_selected.material.uniforms.Kd.value = obj_selected.diffuseColor;
+                        obj_selected.material.uniforms.Ks.value = obj_selected.specularColor;
+                    }
 				}
 				
 				//add new
@@ -741,7 +737,10 @@ function areaChart(file, mat)
 					obj_selected.material.opacity = 0.5;
 					if(mat!="Metals"){
 						obj_selected.material.color.set( obj_selected.darkColor );
-					}
+					} else {
+                        obj_selected.material.uniforms.Kd.value = obj_selected.diffuseColor;
+                        obj_selected.material.uniforms.Ks.value = obj_selected.specularColor;
+                    }
 					obj_selected.labels.forEach( function (l){
 						l.visible = false;
 					});
