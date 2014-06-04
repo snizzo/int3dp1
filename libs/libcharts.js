@@ -6,7 +6,6 @@ function initScene()
 	scene.counter = 0;
 	scene.type = "";
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
-	//var camera = new THREE.OrthographicCamera( window.innerWidth / - 20, window.innerWidth / 20, window.innerHeight / 20, window.innerHeight / - 20, 1, 1000 );
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -144,7 +143,6 @@ function lookAtPieChart()
 
 function barChart(file, mat)
 {	
-	//console.log("mat is: "+mat);
 	//object highlight list
 	var objects = [];
 	//obj labels is a list of all rendered labels for mouse hovering
@@ -292,10 +290,10 @@ function barChart(file, mat)
 		
 		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
 			
-		uniforms.Ks.value = specularColor;//new THREE.Vector3( 0.95, 0.93, 0.88 );
-		uniforms.Kd.value = diffuseColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
-		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));//( 0.19225, 0.19225, 0.19225 ));
-		uniforms.pointLightPosition.value = new THREE.Vector3( 40.0, 40.0, 40.0 )//(light.position.x, light.position.y, light.position.z);
+		uniforms.Ks.value = specularColor;
+		uniforms.Kd.value = diffuseColor;
+		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));
+		uniforms.pointLightPosition.value = new THREE.Vector3( 40.0, 40.0, 40.0 );
 		uniforms.lightPower.value = new THREE.Vector3( 78000.0, 78000.0, 78000.0 );
 		uniforms.s.value = 1;
 		uniforms.m.value = 1;
@@ -583,6 +581,8 @@ function areaChart(file, mat)
 		var metalColors = getRandomVec3(i);
 		var diffuseColor = metalColors[0];
 		var specularColor = metalColors[1];
+		var lighterDiffuseColor = metalColors[2];
+		var lighterSpecularColor = metalColors[3];
 		
 		var uniforms = {
 				Ks:	{ type: "v3", value: new THREE.Vector3() },
@@ -622,7 +622,7 @@ function areaChart(file, mat)
 			}
 		}
 		
-		addShape ( i, linecolor, shinecolor );
+		addShape ( i, linecolor, shinecolor, diffuseColor, specularColor, lighterDiffuseColor, lighterSpecularColor );
 		rectMesh.position.x = 4;
 		rectMesh.position.z = (i+1)*8-6;
 		scene.cubes.add( rectMesh );
@@ -631,7 +631,7 @@ function areaChart(file, mat)
 	scene.add( scene.cubes );
 	scene.objlist.push( scene.cubes );
 	
-	function addShape ( i, c, sc ) {
+	function addShape ( i, c, sc, diffC, specC, lighterDiffC, lighterSpecC ) {
 		var rectShape = new THREE.Shape();
 		rectShape.moveTo( 0,0 );
 		
@@ -700,6 +700,11 @@ function areaChart(file, mat)
 		rectMesh.labels = labels;
 		rectMesh.darkColor = c;
 		rectMesh.lightColor = sc;
+		rectMesh.diffuseColor = diffC;
+		rectMesh.specularColor = specC;
+		rectMesh.lighterDiffuseColor = lighterDiffC;
+		rectMesh.lighterSpecularColor = lighterSpecC;
+		
 		objects.push(rectMesh);
 		
 	}
@@ -752,6 +757,9 @@ function areaChart(file, mat)
 				obj_selected.material.opacity = 0.5;
 				if(mat!="Metals"){
 					obj_selected.material.color.set( obj_selected.darkColor );
+				} else {
+					obj_selected.material.uniforms.Kd.value = obj_selected.diffuseColor;
+					obj_selected.material.uniforms.Ks.value = obj_selected.specularColor;
 				}
 				obj_selected.labels.forEach( function (l){
 					l.visible = false;
@@ -769,6 +777,9 @@ function areaChart(file, mat)
 		if(mat!="Metals"){
 			obj.material.color.set( obj.lightColor );
 			obj.material.opacity = 0.75;
+		} else {
+			obj.material.uniforms.Kd.value = obj.lighterDiffuseColor;
+			obj.material.uniforms.Ks.value = obj.lighterSpecularColor;
 		}
 		obj.labels.forEach( function (l) {
 			l.visible = true;
