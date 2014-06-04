@@ -42,7 +42,7 @@ function initScene()
     //shadowlight.shadowCameraVisible = true;
 
     shadowlight.shadowBias = 0.0001;
-    shadowlight.shadowDarkness = 0.7;
+    shadowlight.shadowDarkness = 0.3;
 
     shadowlight.shadowMapWidth = 2048;
     shadowlight.shadowMapHeight = 2048;
@@ -139,7 +139,7 @@ function lookAtPieChart()
 	controls.target = new THREE.Vector3(0, 0, 0);
 }
 
-function barChart(file, mat)
+function barChart(file, mat, shadows)
 {	
 	//object highlight list
 	var objects = [];
@@ -158,7 +158,14 @@ function barChart(file, mat)
 	var material, geometry, mesh;
 	
 	scene.type = "bar";
-			
+	
+    //setting specific material shadow darkness
+    if(mat!="Metals"){
+        scene.shadowlight.shadowDarkness = 0.3;
+    } else {
+        scene.shadowlight.shadowDarkness = 0.7;
+    }
+    
 	darkgrey = new THREE.MeshPhongMaterial( { ambient: 0x444444, color: 0x444444, specular: 0x444444, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
 	lightgrey = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0x555555, specular: 0x555555, shininess:4, shading: THREE.FlatShading, side: THREE.DoubleSide }  );
 	
@@ -175,8 +182,13 @@ function barChart(file, mat)
 		}
 		mesh.position.y = 1.5+(3*i);
 		mesh.position.x += n*4;
-        mesh.castShadow = false;
-        mesh.receiveShadow = true;
+        if(shadows){
+            mesh.castShadow = false;
+            mesh.receiveShadow = true;
+        } else {
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+        }
 		scene.add(mesh);
 		scene.objlist.push( mesh );
 	}
@@ -195,8 +207,13 @@ function barChart(file, mat)
 		mesh.rotation.y = (Math.PI * 90/180);
 		mesh.position.y = 1.5+(3*i);
 		mesh.position.z += r*4;
-        mesh.castShadow = false;
-        mesh.receiveShadow = true;
+        if(shadows){
+            mesh.castShadow = false;
+            mesh.receiveShadow = true;
+        } else {
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+        }
 		scene.add(mesh);
 		scene.objlist.push( mesh );
 		
@@ -236,8 +253,13 @@ function barChart(file, mat)
 			mesh.position.y = 0;
 			mesh.position.z = (i+1)*8-4;
 			mesh.rotation.x = Math.PI * 90/180
-			mesh.castShadow = false;
-            mesh.receiveShadow = true;
+			if(shadows){
+                mesh.castShadow = false;
+                mesh.receiveShadow = true;
+            } else {
+                mesh.castShadow = false;
+                mesh.receiveShadow = false;
+            }
 			scene.add( mesh );
 			scene.objlist.push( mesh );
 		}
@@ -334,12 +356,22 @@ function barChart(file, mat)
 										opacity:0.5,
 										shininess: 2,
 										shading: THREE.FlatShading }  )  );
-            cube.castShadow = true;
-            cube.receiveShadow = true;
+            if(shadows){
+                cube.castShadow = true;
+                cube.receiveShadow = true;
+            } else {
+                cube.castShadow = false;
+                cube.receiveShadow = false;
+            }
 		} else {
 			cube = new THREE.Mesh( geom, new THREE.ShaderMaterial({ uniforms: getUniforms(), vertexShader: vs, fragmentShader: fs }) );
-            cube.castShadow = true;
-            cube.receiveShadow = true;
+            if(shadows){
+                cube.castShadow = true;
+                cube.receiveShadow = true;
+            } else {
+                cube.castShadow = false;
+                cube.receiveShadow = false;
+            }
 		}
 		
 		cube.darkColor = c;
@@ -460,7 +492,7 @@ function barChart(file, mat)
 	}
 }
 
-function areaChart(file, mat)
+function areaChart(file, mat, shadows)
 {
 	//object highlight list
 	var objects = [];
@@ -476,6 +508,13 @@ function areaChart(file, mat)
 	
 	scene.type = "area";
 	
+    //setting specific material shadow darkness
+    if(mat!="Metals"){
+        scene.shadowlight.shadowDarkness = 0.3;
+    } else {
+        scene.shadowlight.shadowDarkness = 0.7;
+    }
+    
 	//draw ground
 	
 	var material, geometry, mesh;
@@ -498,8 +537,13 @@ function areaChart(file, mat)
 		}
 		mesh.position.y = 1.5+(3*i);
 		mesh.position.x += n*4;
-        mesh.castShadow = false;
-        mesh.receiveShadow = true;
+        if(shadows){
+            mesh.castShadow = false;
+            mesh.receiveShadow = true;
+        } else {
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+        }
 		scene.add(mesh);
 		scene.objlist.push(mesh);
 	}
@@ -518,8 +562,13 @@ function areaChart(file, mat)
 		mesh.rotation.y = (Math.PI * 90/180);
 		mesh.position.y = 1.5+(3*i);
 		mesh.position.z += r*4;
-        mesh.castShadow = false;
-        mesh.receiveShadow = true;
+        if(shadows){
+            mesh.castShadow = false;
+            mesh.receiveShadow = true;
+        } else {
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+        }
 		scene.add(mesh);
 		scene.objlist.push(mesh);
 		
@@ -559,8 +608,13 @@ function areaChart(file, mat)
 			mesh.position.y = 0;
 			mesh.position.z = (i+1)*8-4;
 			mesh.rotation.x = Math.PI * 90/180
-			mesh.castShadow = false;
-            mesh.receiveShadow = true;
+			if(shadows){
+                mesh.castShadow = false;
+                mesh.receiveShadow = true;
+            } else {
+                mesh.castShadow = false;
+                mesh.receiveShadow = false;
+            }
 			scene.add( mesh );
 			scene.objlist.push(mesh);
 		}
@@ -685,12 +739,22 @@ function areaChart(file, mat)
 										opacity:0.5,
 										shininess: 2,
 										shading: THREE.SmoothShading }  ) );
-            rectMesh.castShadow = true;
-            rectMesh.receiveShadow = true;
+            if(shadows){
+                rectMesh.castShadow = true;
+                rectMesh.receiveShadow = true;
+            } else {
+                rectMesh.castShadow = false;
+                rectMesh.receiveShadow = false;
+            }
 		} else {
 			rectMesh = new THREE.Mesh( rectGeom, cubeMaterial );
-            rectMesh.castShadow = true;
-            rectMesh.receiveShadow = true;
+            if(shadows){
+                rectMesh.castShadow = true;
+                rectMesh.receiveShadow = true;
+            } else {
+                rectMesh.castShadow = false;
+                rectMesh.receiveShadow = false;
+            }
 		}
 		//adding custom props to mesh
 		rectMesh.labels = labels;
