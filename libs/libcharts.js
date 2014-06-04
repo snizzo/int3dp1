@@ -272,6 +272,8 @@ function barChart(file, mat)
 		var metalColors = getRandomVec3(i);
 		var diffuseColor = metalColors[0];
 		var specularColor = metalColors[1];
+		var lighterDiffuseColor = metalColors[2];
+		var lighterSpecularColor = metalColors[3];
 		
 		var uniforms = {
 				Ks:	{ type: "v3", value: new THREE.Vector3() },
@@ -290,30 +292,22 @@ function barChart(file, mat)
 		
 		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
 			
-		/*light = new THREE.Mesh( new THREE.SphereGeometry( 1, 16, 16), new THREE.MeshBasicMaterial ({color: 0xffff00, wireframe:true}));
-		light.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
-		scene.add( light );
-		
-		pointLight = new THREE.PointLight( 0xffaa00, 2 );
-		pointLight.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
-		scene.add( pointLight );*/
-			
 		uniforms.Ks.value = specularColor;//new THREE.Vector3( 0.95, 0.93, 0.88 );
 		uniforms.Kd.value = diffuseColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
 		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));//( 0.19225, 0.19225, 0.19225 ));
 		uniforms.pointLightPosition.value = new THREE.Vector3( 40.0, 40.0, 40.0 )//(light.position.x, light.position.y, light.position.z);
 		uniforms.lightPower.value = new THREE.Vector3( 78000.0, 78000.0, 78000.0 );
-		uniforms.s.value = 1;//0.5;
-		uniforms.m.value = 1;//0.1;
+		uniforms.s.value = 1;
+		uniforms.m.value = 1;
 		
 		for (j=0; j<n; j++) {
-			addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor );
+			addCube ( getNorm(file["data"][i]["floats"][j],maximum,maxexp), linecolor, shinecolor, diffuseColor, specularColor, lighterDiffuseColor, lighterSpecularColor );
 			cube.position.x = wcube.position.x = (j+1)*8-4;
 			cube.position.y = wcube.position.y = getNorm(file["data"][i]["floats"][j],maximum,maxexp)/2;
 			cube.position.z = wcube.position.z = (i+1)*8-4;
 			scene.cubes.add( cube );
 			if(mat!="Metals"){
-				cube.add( wcube );////////////////////////////////////////////////////////// per rimettere il wireframe
+				cube.add( wcube );
 			}
 			if(j==(n-1)){
                 if(mat!="Metals"){
@@ -338,7 +332,7 @@ function barChart(file, mat)
 	//highlights on user input
 	$( document ).bind( "mousemove", onDocumentMouseMove);
 	
-	function addCube ( h,c, sc) {
+	function addCube ( h,c, sc, diffC, specC, lighterDiffC, lighterSpecC) {
 		var geom = new THREE.CubeGeometry( 4, h, 4 );
 		if(mat!="Metals"){
 			cube = new THREE.Mesh( geom, new THREE.MeshPhongMaterial( {
@@ -359,6 +353,10 @@ function barChart(file, mat)
 		
 		cube.darkColor = c;
 		cube.lightColor = sc;
+		cube.diffuseColor = diffC;
+		cube.specularColor = specC;
+		cube.lighterDiffuseColor = lighterDiffC;
+		cube.lighterSpecularColor = lighterSpecC;
 		wcube = new THREE.BoxHelper( cube );
 		wcube.material.color.set( sc );
 		
@@ -402,6 +400,9 @@ function barChart(file, mat)
 				if(mat!="Metals"){
 					obj_selected.material.opacity = 0.5;
 					obj_selected.material.color.set( obj_selected.darkColor );
+				} else {
+					obj_selected.material.uniforms.Kd.value = obj_selected.diffuseColor;
+					obj_selected.material.uniforms.Ks.value = obj_selected.specularColor;
 				}
 			}
 			//remove
@@ -419,6 +420,10 @@ function barChart(file, mat)
 		if(mat!="Metals"){
 			obj.material.color.set( obj.lightColor );
 			obj.material.opacity = 0.75;
+		} else {
+			console.log(obj);
+			obj.material.uniforms.Kd.value = obj.lighterDiffuseColor;
+			obj.material.uniforms.Ks.value = obj.lighterSpecularColor;
 		}
 		
 		var lmesh = getMeshText(value.toString(), 2, 0.15, 0xcccccc, "center");
@@ -595,13 +600,13 @@ function areaChart(file, mat)
 		
 		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
 
-		uniforms.Ks.value = specularColor;//new THREE.Vector3( 0.95, 0.93, 0.88 );
-		uniforms.Kd.value = diffuseColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
-		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));//( 0.19225, 0.19225, 0.19225 ));
-		uniforms.pointLightPosition.value = new THREE.Vector3( 40.0, 40.0, 40.0 )//(light.position.x, light.position.y, light.position.z);
+		uniforms.Ks.value = specularColor;
+		uniforms.Kd.value = diffuseColor;
+		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));
+		uniforms.pointLightPosition.value = new THREE.Vector3( 40.0, 40.0, 40.0 );
 		uniforms.lightPower.value = new THREE.Vector3( 78000.0, 78000.0, 78000.0 );
-		uniforms.s.value = 1;//0.5;
-		uniforms.m.value = 1;//0.1;
+		uniforms.s.value = 1;
+		uniforms.m.value = 1;
 		
 		//for first line, add labels
 		if(i==(r-1)){
@@ -829,22 +834,14 @@ function pieChart(file, mat)
 		var fs = document.getElementById("ct-fragment").textContent;
 		
 		var cubeMaterial = new THREE.ShaderMaterial({ uniforms: uniforms, vertexShader: vs, fragmentShader: fs });
-			
-		/*light = new THREE.Mesh( new THREE.SphereGeometry( 1, 16, 16), new THREE.MeshBasicMaterial ({color: 0xffff00, wireframe:true}));
-		light.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
-		scene.add( light );
 		
-		pointLight = new THREE.PointLight( 0xffaa00, 2 );
-		pointLight.position = new THREE.Vector3( 40.0, 40.0, 40.0 );
-		scene.add( pointLight );*/
-			
-		uniforms.Ks.value = specularColor;//new THREE.Vector3( 0.95, 0.93, 0.88 );
-		uniforms.Kd.value = diffuseColor;//(new THREE.Vector3( 0.8,0.8,0.1 ));//( 0.50754, 0.50754, 0.50754 ));
-		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));//( 0.19225, 0.19225, 0.19225 ));
-		uniforms.pointLightPosition.value = new THREE.Vector3( 20, 4.2, 40 )//(light.position.x, light.position.y, light.position.z);
+		uniforms.Ks.value = specularColor;
+		uniforms.Kd.value = diffuseColor;
+		uniforms.ambient.value = (new THREE.Vector3(0.3,0.3,0.3));
+		uniforms.pointLightPosition.value = new THREE.Vector3( 20, 4.2, 40 );
 		uniforms.lightPower.value = new THREE.Vector3( 78000.0, 78000.0, 78000.0 );
-		uniforms.s.value = 1;//0.5;
-		uniforms.m.value = 1;//0.1;
+		uniforms.s.value = 1;
+		uniforms.m.value = 1;
 		
 		//too small chunks fix
 		if(fac < 4.5){
@@ -931,7 +928,7 @@ function pieChart(file, mat)
 						shininess: 2,
 						shading: THREE.FlatShading }  );
 			var meshGeom = new THREE.Mesh( rectGeom, meshGeomShineMaterial);
-			meshGeom.add( line );//////////////////////////////////////////// per rimettere i wireframe
+			meshGeom.add( line );
 			meshGeom.add( line1 );
 		} else {
 			var meshGeom = new THREE.Mesh( rectGeom, cmat);
@@ -991,7 +988,7 @@ function pieChart(file, mat)
 			}
 		} else {
 			if(obj_selected!=null){
-				//poppin in
+				//popping in
 				obj_selected.position = new THREE.Vector3(0,0,0);
 				if(mat!="Metals"){
 					obj_selected.material.color.set( obj_selected.darkColor );

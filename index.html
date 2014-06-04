@@ -28,7 +28,7 @@
 		<script src="libs/utils.js"></script>
 
 	<body>
-		<script type="text/x-glsl" id="vertex">				////////////////////////////////////////////////////////////////////////////////////
+		<script type="text/x-glsl" id="vertex">
 		varying vec3 transformedNormal;
 		varying vec3 pointPosition;
 		varying vec3 lightVector;
@@ -94,7 +94,6 @@
 				gl_FragColor = vec4(beta * NdotL * ((1.0-s)*Kd + s*Specular) + ambient*Kd, 1.0);
 			}
 			
-			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		</script>
 		<script>
 			var FizzyText = function() {
