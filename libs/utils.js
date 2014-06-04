@@ -42,10 +42,22 @@ function getRandomVec3(i) {
 	smetals.push(new THREE.Vector3(0.6666,0.6666,0.6666));
 	smetals.push(new THREE.Vector3(1.399995,0.6,0));
 	
+	var lighterdmetals = [];
+	lighterdmetals.push(new THREE.Vector3(0.99,0.9,0.399999));
+	lighterdmetals.push(new THREE.Vector3(0.76335,0.76335,0.76335));
+	lighterdmetals.push(new THREE.Vector3(1.55802,0.3708,0.3708));
+	
+	var lightersmetals = [];
+	lightersmetals.push(new THREE.Vector3(1.1,1,0.9));
+	lightersmetals.push(new THREE.Vector3(1,1,1));
+	lightersmetals.push(new THREE.Vector3(2.1,0.9,0));
+	
 	var r = i % dmetals.length;
 	var results = [];
 	results.push(dmetals[r]);
 	results.push(smetals[r]);
+	results.push(lighterdmetals[r]);
+	results.push(lightersmetals[r]);
 
 	return results;
 }
