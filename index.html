@@ -100,6 +100,7 @@
 				this.Type = 'Bar';
 				this.Example = 'Small';
                 this.Material = 'Metals';
+                this.enableShadows = false;
 			};
 			
 			/*
@@ -118,20 +119,25 @@
 				var typeController = gui.add(text, 'Type', [ 'Bar', 'Area', 'Pie' ] );
 				var exampleController = gui.add(text, 'Example', [ 'Small', 'Medium', 'Big', 'Similar Values', 'Wide labels' ] );
                 var materialController = gui.add(text, 'Material', [ 'Metals', 'Phong' ] );
+                var enableShadowsController = gui.add(text, 'enableShadows' );
 				
 				typeController.onFinishChange(function(value) {
-					generateChart(text.Type, text.Example, text.Material);
+					generateChart(text.Type, text.Example, text.Material, text.enableShadows);
 				});
 				
 				exampleController.onFinishChange(function(value) {
-					generateChart(text.Type, text.Example, text.Material);
+					generateChart(text.Type, text.Example, text.Material, text.enableShadows);
 				});
 				
 				materialController.onFinishChange(function(value) {
-					generateChart(text.Type, text.Example, text.Material);
+					generateChart(text.Type, text.Example, text.Material, text.enableShadows);
 				});
+                
+                enableShadowsController.onFinishChange(function(value) {
+                    generateChart(text.Type, text.Example, text.Material, text.enableShadows);
+                });
 				
-				function generateChart(type, example, mat)
+				function generateChart(type, example, mat, shadows)
 				{
 					clearScene();
 					
@@ -157,17 +163,17 @@
 							break;
 					}
 					
-					$.get(filestring, function (data) { showChart(data,type,mat); });
+					$.get(filestring, function (data) { showChart(data,type,mat,shadows); });
 				}
 				
-				function showChart(csvfile, type, mat)
+				function showChart(csvfile, type, mat,shadows)
 				{
 					var file = fromCsvToAssociative(csvfile);
 					
 					if(type == 'Bar'){
-						barChart(file, mat);
+						barChart(file, mat, shadows);
 					} else if (type == 'Area') {
-						areaChart(file, mat);
+						areaChart(file, mat, shadows);
 					} else if (type == 'Pie') {
 						pieChart(file, mat);
 					} else {
