@@ -6,7 +6,6 @@ function initScene()
 	scene.counter = 0;
 	scene.type = "";
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
-	//var camera = new THREE.OrthographicCamera( window.innerWidth / - 20, window.innerWidth / 20, window.innerHeight / 20, window.innerHeight / - 20, 1, 1000 );
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -38,8 +37,6 @@ function initScene()
     shadowlight.shadowCameraNear = 1;
     shadowlight.shadowCameraFar = 500;
     shadowlight.shadowCameraFov = 50;
-
-    //shadowlight.shadowCameraVisible = true;
 
     shadowlight.shadowBias = 0.0001;
     shadowlight.shadowDarkness = 0.3;
