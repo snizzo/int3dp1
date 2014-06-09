@@ -59,8 +59,6 @@ function getMaxValue(arr)
 {
 	var allvalues = [];
 	arr["data"].forEach(function(entry) {
-		//console.log(entry["label"]);
-		//console.log(entry["floats"]);
 		
 		entry["floats"].forEach(function(f_entry) {
 			allvalues.push( f_entry );

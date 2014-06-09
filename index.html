@@ -47,18 +47,16 @@
 		<script type="text/x-glsl" id="ct-fragment">
 			uniform vec3 lightPower;
 			uniform vec3 ambient;
-			uniform vec3 Kd; // surface diffuse color
-			uniform vec3 Ks; // surface specular color: equal to R_F(0)
-			uniform float m; // material roughness (average slope of microfacets)
-			uniform float s; // percentage of incoming light which is specularly reflected
-
+			uniform vec3 Kd;
+			uniform vec3 Ks;
+			uniform float m;
+			uniform float s;
 			varying vec3 transformedNormal;
 			varying vec3 pointPosition;
 			varying vec3 lightVector;
 
 			#define PI 3.14159265	
 
-			// compute the geometry term
 			float G(float NdotH, float NdotV, float VdotH, float NdotL)
 			{
 				float G1 = 2.0 * NdotH * NdotV / VdotH;
@@ -66,12 +64,12 @@
 				return min( 1.0, min( G1, G2 ));
 			}
 
-			// compute Fresnel reflection term
+			// Fresnel
 			vec3 R_F(float VdotH) {
 				return Ks + (1.0 - Ks)*pow(1.0-VdotH, 5.0);
 			}
 
-			// compute the normal distribution function, based on Beckmann distribution
+			// Beckmann
 			float Beckmann(float NdotH){
 				float A = 1.0 / (pow(m,2.0)+pow(NdotH,4.0)*PI);
 				float B = exp( - pow( tan(acos(NdotH)) , 2.0) / pow(m,2.0));
@@ -87,8 +85,7 @@
 				float  NdotH    		= max(0.0, dot( n, h ));  
 				float  VdotH     		= max(0.0, dot( v, h ));  
 				float  NdotV 			= max(0.0, dot( n, v ));  
-				float  NdotL 			= max(0.0, dot( n, l ));    
-				// specular BRDF
+				float  NdotL 			= max(0.0, dot( n, l ));
 				vec3 Specular = (Beckmann(NdotH) * G(NdotH, NdotV, VdotH, NdotL) * R_F(VdotH)) / ( NdotL* NdotV);
 				vec3 beta = lightPower / ( 4.0  * PI * pow( length(lightVector),2.0) );
 				gl_FragColor = vec4(beta * NdotL * ((1.0-s)*Kd + s*Specular) + ambient*Kd, 1.0);
